@@ -14,3 +14,5 @@ Dockerfile text eol=lf
 .gitignore text eol=lf
 .dockerignore text eol=lf
 .env.example text eol=lf
+go.mod text eol=lf
+go.sum text eol=lf
