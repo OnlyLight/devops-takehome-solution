@@ -1,0 +1,46 @@
+# Self-contained harness: `docker compose up -d` builds the toolbox, creates the k3d
+# cluster (1 server + 4 agents), runs troubleshoot/prepare.sh, then leaves a toolbox
+# container running with kubectl/helm/terraform/k6 and ./scripts bind-mounted.
+name: itv
+
+x-toolbox: &toolbox
+  build:
+    context: ./toolbox
+  image: itv-toolbox:local
+  environment:
+    CLUSTER_NAME: ${CLUSTER_NAME:-itv}
+    HOST_PORT: ${HOST_PORT:-8080}
+    REPO_URL: ${REPO_URL:-}
+    KUBECONFIG: /kube/config
+    IN_TOOLBOX: "1"
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./scripts:/scripts
+    - .:/workspace
+    - kube:/kube
+  networks: [itv-net]
+
+services:
+  # One-shot: create cluster + label nodes. Idempotent, so re-running `up` is safe.
+  bootstrap:
+    <<: *toolbox
+    container_name: itv-bootstrap
+    command: ["bash", "-c", "bash /scripts/00-cluster.sh && bash /scripts/05-prepare-nodes.sh"]
+    restart: "no"
+
+  toolbox:
+    <<: *toolbox
+    container_name: itv-toolbox
+    command: ["sleep", "infinity"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+
+networks:
+  # Fixed name: k3d attaches the cluster to it, so the toolbox reaches the API
+  # via the load balancer container (k3d-<cluster>-serverlb:6443).
+  itv-net:
+    name: itv-net
+
+volumes:
+  kube:
