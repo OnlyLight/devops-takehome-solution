@@ -15,12 +15,16 @@ spec:
         {{- include "quote-api.selectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "quote-api.fullname" . }}
-      automountServiceAccountToken: false
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      # Pod-level hardening. The task asks for non-root + read-only rootfs; seccomp is an extra
+      # (together with the container-level flags below it matches the Pod Security "restricted" profile).
       securityContext:
+        # Refuse to start if the image would run as root (kubelet checks the effective UID).
         runAsNonRoot: true
+        # Matches the distroless "nonroot" user baked into the image.
         runAsUser: 65532
         runAsGroup: 65532
+        # Filter system calls with the container runtime's default profile (blocks e.g. ptrace, mount).
         seccompProfile:
           type: RuntimeDefault
       # --- Placement -------------------------------------------------------------------------
@@ -103,8 +107,12 @@ spec:
             failureThreshold: 2
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          # Container-level hardening.
           securityContext:
+            # Sets the kernel no_new_privs flag: no setuid/sudo can gain extra privileges. (extra)
             allowPrivilegeEscalation: false
+            # The filesystem cannot be written to; the Go binary needs no scratch space. (required by the task)
             readOnlyRootFilesystem: true
             capabilities:
+              # Drop every Linux capability (bind low ports, chown, mount, ...). The app only listens on 8080. (extra)
               drop: ["ALL"]
