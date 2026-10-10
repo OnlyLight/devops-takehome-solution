@@ -1,0 +1,9 @@
+# Trimmed ArgoCD: only what a single-app GitOps demo needs, to keep the laptop footprint small.
+dex:
+  enabled: false
+notifications:
+  enabled: false
+# This chart version has no `applicationSet.enabled` key (Helm silently ignores unknown keys),
+# so the controller is switched off by scaling it to zero. Checked against `helm show values`.
+applicationSet:
+  replicas: 0
