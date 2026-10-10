@@ -1,0 +1,21 @@
+# Secrets / local state - never commit
+.env
+*.kubeconfig
+kubeconfig*
+.kube/
+*.pem
+*.key
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl.bak
+# Build / OS / editor
+/app/bin/
+*.test
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+# Local scratch (AI-USAGE draft lives here until M8)
+/scratch/
+nul

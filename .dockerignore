@@ -1,0 +1,11 @@
+.git
+.github
+.env
+*.md
+scratch
+chart
+iac
+loadtest
+monitoring
+troubleshoot
+scripts
