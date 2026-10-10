@@ -1,0 +1,6 @@
+apiVersion: v2
+name: quote-api
+description: Quote API served behind Traefik, spot-preferring with a guaranteed on-demand replica
+type: application
+version: 0.1.0
+appVersion: "sha-95a7ff1c6996b5610444acb22a976de149123e19"

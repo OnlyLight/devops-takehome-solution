@@ -1,0 +1,45 @@
+image:
+  repository: ghcr.io/onlylight/devops-takehome-solution/quote-api
+  # Always a git-SHA tag that already exists on GHCR (never `latest`). Bumped by a Git commit; ArgoCD syncs it.
+  tag: sha-95a7ff1c6996b5610444acb22a976de149123e19
+  pullPolicy: IfNotPresent
+
+service:
+  port: 80
+
+ingress:
+  enabled: true
+  className: traefik
+  path: /
+  # No host on purpose: `curl http://localhost:<port>/api/quote` must work from the reviewer's host.
+
+# The app burns ~100ms of CPU per request, so CPU is what saturates (and what the HPA watches).
+resources:
+  requests:
+    cpu: 100m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 128Mi
+
+# spec.replicas is deliberately NOT set on the Deployment: the HPA owns it.
+# With ArgoCD selfHeal a hard-coded replica count would be reverted against the HPA.
+autoscaling:
+  minReplicas: 3
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 60
+
+pdb:
+  maxUnavailable: 1
+
+# SIGTERM -> app turns /readyz off, waits DRAIN_DELAY, then shuts down. Grace period must exceed both.
+terminationGracePeriodSeconds: 30
+drainDelay: 3s
+
+# Placement: prefer spot, but always keep a replica on on-demand (see templates/deployment.yaml).
+placement:
+  capacityLabel: acme.io/capacity
+  spotWeight: 100
+  onDemandWeight: 10
+  # Max difference in replica count between the spot and on-demand domains.
+  capacityMaxSkew: 2

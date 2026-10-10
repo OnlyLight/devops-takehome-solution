@@ -1,0 +1,15 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "quote-api.fullname" . }}
+  labels:
+    {{- include "quote-api.labels" . | nindent 4 }}
+spec:
+  # maxUnavailable (not minAvailable) so the budget scales with the HPA, and a drain can always
+  # evict one pod at a time. minAvailable equal to the replica count would block every drain.
+  maxUnavailable: {{ .Values.pdb.maxUnavailable }}
+  # Pods that are not Ready may be evicted regardless of the budget, so a stuck pod cannot block a drain.
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      {{- include "quote-api.selectorLabels" . | nindent 6 }}

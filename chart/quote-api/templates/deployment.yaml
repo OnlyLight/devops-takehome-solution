@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "quote-api.fullname" . }}
+  labels:
+    {{- include "quote-api.labels" . | nindent 4 }}
+spec:
+  # No `replicas:` here - the HPA owns the replica count.
+  selector:
+    matchLabels:
+      {{- include "quote-api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "quote-api.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "quote-api.fullname" . }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      # --- Placement -------------------------------------------------------------------------
+      # Goal: prefer spot (cost) but ALWAYS keep >=1 replica on on-demand (availability), and
+      # never land on the GPU node, while still rescheduling when a node disappears.
+      #
+      # 1) REQUIRED affinity: only nodes that carry a capacity label. This is what keeps the app
+      #    off the GPU node (no capacity label) and off the unlabeled control-plane node.
+      #    No GPU toleration is added on purpose.
+      # 2) PREFERRED affinity: weight spot over on-demand. Preference only; the scheduler scores,
+      #    it does not guarantee, so this alone could put all replicas on spot.
+      # 3) topologySpread across the capacity label (domains: spot, on-demand) with a hard
+      #    maxSkew. Replica 3 on spot would make the skew spot-on-demand = 3 > 2, so it is forced
+      #    onto on-demand => 2 spot + 1 on-demand.
+      #    nodeTaintsPolicy/nodeAffinityPolicy=Honor: cordoned/tainted nodes drop out of the
+      #    domain count. With the default (Ignore) an emptied domain still counts as 0 replicas,
+      #    caps the other domain, and a drained replica can sit Pending forever. This is the trap
+      #    the reclaim drill exercises.
+      #    matchLabelKeys=pod-template-hash: each ReplicaSet is spread independently during a rollout.
+      # 4) hostname spread is soft (ScheduleAnyway): nice to have, never blocks scheduling.
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: {{ .Values.placement.capacityLabel }}
+                    operator: In
+                    values: ["spot", "on-demand"]
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: {{ .Values.placement.spotWeight }}
+              preference:
+                matchExpressions:
+                  - key: {{ .Values.placement.capacityLabel }}
+                    operator: In
+                    values: ["spot"]
+            - weight: {{ .Values.placement.onDemandWeight }}
+              preference:
+                matchExpressions:
+                  - key: {{ .Values.placement.capacityLabel }}
+                    operator: In
+                    values: ["on-demand"]
+      topologySpreadConstraints:
+        - topologyKey: {{ .Values.placement.capacityLabel }}
+          maxSkew: {{ .Values.placement.capacityMaxSkew }}
+          whenUnsatisfiable: DoNotSchedule
+          nodeAffinityPolicy: Honor
+          nodeTaintsPolicy: Honor
+          matchLabelKeys: ["pod-template-hash"]
+          labelSelector:
+            matchLabels:
+              {{- include "quote-api.selectorLabels" . | nindent 14 }}
+        - topologyKey: kubernetes.io/hostname
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+          matchLabelKeys: ["pod-template-hash"]
+          labelSelector:
+            matchLabels:
+              {{- include "quote-api.selectorLabels" . | nindent 14 }}
+      containers:
+        - name: quote-api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: DRAIN_DELAY
+              value: {{ .Values.drainDelay | quote }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 3
+            failureThreshold: 2
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
