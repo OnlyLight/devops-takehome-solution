@@ -1,0 +1,21 @@
+{{- /*
+Rendered only when the Prometheus Operator API exists in the cluster, so the chart installs cleanly
+with or without kube-prometheus-stack (scripts/40-monitoring.sh refreshes ArgoCD's API cache after the
+CRDs appear). It selects this chart's own Service by label and scrapes the named port `http`.
+*/ -}}
+{{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "quote-api.fullname" . }}
+  labels:
+    {{- include "quote-api.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "quote-api.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.serviceMonitor.interval }}
+{{- end }}

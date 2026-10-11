@@ -1,0 +1,72 @@
+# Slim kube-prometheus-stack for a laptop-sized k3d cluster. Every key below was checked against
+# `helm show values prometheus-community/kube-prometheus-stack --version 92.2.0`.
+
+# Cut on purpose (also listed in the README): Alertmanager (the task needs an alert RULE, not a
+# notification channel), the stock rule set and dashboards (our own rule and dashboard replace them),
+# node-exporter, and the control-plane scrapes k3s does not expose (etcd/scheduler/controller-manager/proxy).
+alertmanager:
+  enabled: false
+defaultRules:
+  create: false
+nodeExporter:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    scrapeInterval: 15s # finer graphs during a short load test
+    retention: 6h # in-memory/emptyDir only: this is a demo cluster
+    # Pick up ServiceMonitors and PrometheusRules from ANY namespace without a `release` label,
+    # so the app chart stays independent of how monitoring was installed.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        memory: 1Gi
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+kube-state-metrics: # replica counts for the dashboard
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi
+
+grafana:
+  defaultDashboardsEnabled: false # ours is loaded by the sidecar from a labelled ConfigMap
+  # No adminPassword here: the chart generates a random one into a Secret (see scripts/40-monitoring.sh).
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts: [grafana.localhost] # browsers resolve *.localhost to 127.0.0.1; reached through host :8080
+    path: /
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi

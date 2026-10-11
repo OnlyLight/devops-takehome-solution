@@ -32,6 +32,10 @@ autoscaling:
 pdb:
   maxUnavailable: 1
 
+# Scrape interval for the ServiceMonitor (only rendered when the Prometheus Operator CRDs exist).
+serviceMonitor:
+  interval: 15s
+
 # SIGTERM -> app turns /readyz off, waits DRAIN_DELAY, then shuts down. Grace period must exceed both.
 terminationGracePeriodSeconds: 30
 drainDelay: 3s
