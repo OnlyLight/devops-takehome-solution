@@ -12,6 +12,7 @@ Looked up from upstream release pages / registries on 2026-10-09 (not from memor
 | k6 | `v2.3.0` | GitHub releases | |
 | argo-cd chart | `10.10.1` (app `v3.5.4`) | argo-helm `Chart.yaml` | |
 | kube-prometheus-stack chart | `92.2.0` (operator `v0.94.1`) | prometheus-community `Chart.yaml` | |
+| descheduler chart | `0.37.0` (app `0.37.0`) | `helm search repo descheduler/descheduler --versions` | restores the spot/on-demand spread after HPA scale-down; default policy narrowed to one plugin (see `descheduler/values.yaml`) |
 | nginx (Part 3 fix) | `1.25.5` | Docker Hub tags (1.25.2-1.25.5 exist; `1.25.99` does not) | |
 | curlimages/curl (smoke job) | `8.7.1` | provided `smoke-job.yaml`; amd64+arm64 | |
 | distroless base | `gcr.io/distroless/static:nonroot` | manifest: amd64+arm64 | UID 65532 |

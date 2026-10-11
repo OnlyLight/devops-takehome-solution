@@ -1,0 +1,39 @@
+# Why this exists: topologySpread only acts when a pod is PLACED. When the HPA scales down, the ReplicaSet picks which
+# pods to delete without looking at the spread, and was observed to remove every on-demand replica (3 spot + 0
+# on-demand), breaking "at least one replica must always run on the on-demand node". The descheduler notices that the
+# spread constraint is violated (skew 3 > maxSkew 2), evicts a spot pod, and the scheduler is then forced to put its
+# replacement on on-demand.
+#
+# Deliberately narrow: ONE plugin, ONLY the app's namespace, hard constraints only, tiny resources. The chart default
+# enables eight plugins (RemoveDuplicates, LowNodeUtilization, ...) that have nothing to do with this.
+
+kind: Deployment
+deschedulingInterval: 2m
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
+
+deschedulerPolicy:
+  profiles:
+    - name: spread
+      pluginConfig:
+        - name: DefaultEvictor
+          args:
+            # Evict only when the pod can be scheduled elsewhere; evictions go through the Eviction API,
+            # so the PodDisruptionBudget (maxUnavailable: 1) is honoured.
+            nodeFit: true
+        - name: RemovePodsViolatingTopologySpreadConstraint
+          args:
+            constraints:
+              - DoNotSchedule
+            namespaces:
+              include:
+                - quote-api
+      plugins:
+        balance:
+          enabled:
+            - RemovePodsViolatingTopologySpreadConstraint
