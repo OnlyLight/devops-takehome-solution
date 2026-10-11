@@ -1,7 +1,7 @@
 image:
   repository: ghcr.io/onlylight/devops-takehome-solution/quote-api
   # Always a git-SHA tag that already exists on GHCR (never `latest`). Bumped by a Git commit; ArgoCD syncs it.
-  tag: sha-95a7ff1c6996b5610444acb22a976de149123e19
+  tag: sha-037670c7999585b738119349795dc24bf3f9669a
   pullPolicy: IfNotPresent
 
 service:
@@ -13,10 +13,13 @@ ingress:
   path: /
   # No host on purpose: `curl http://localhost:<port>/api/quote` must work from the reviewer's host.
 
-# The app burns ~100ms of CPU per request, so CPU is what saturates (and what the HPA watches).
+# Each /api/quote request is ~100ms of CPU work, so CPU is what saturates (and what the HPA watches).
+# Measured with this limit: one pod is stable up to ~4 req/s and collapses at 5. The HPA scales on a % of the
+# REQUEST, so the request is sized to start scaling at about half of that capacity: 60% of 300m = 180m of CPU,
+# roughly 1.8 req/s per pod. (With a 100m request the same 60% was only ~0.6 req/s per pod: scale-out far too early.)
 resources:
   requests:
-    cpu: 100m
+    cpu: 300m
     memory: 64Mi
   limits:
     cpu: 500m
