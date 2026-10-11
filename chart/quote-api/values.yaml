@@ -39,6 +39,11 @@ pdb:
 serviceMonitor:
   interval: 15s
 
+# Latency alert (templates/prometheusrule.yaml): why these numbers is explained in that file.
+alert:
+  p95Seconds: 0.5
+  for: 2m
+
 # SIGTERM -> app turns /readyz off, waits DRAIN_DELAY, then shuts down. Grace period must exceed both.
 terminationGracePeriodSeconds: 30
 drainDelay: 3s

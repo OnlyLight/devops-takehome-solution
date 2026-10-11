@@ -1,0 +1,34 @@
+{{- /*
+One alert, rendered only when the Prometheus Operator API exists (same guard as the ServiceMonitor).
+
+Why latency and not the 5xx ratio: when this service saturates (measured: one pod collapses at ~5 req/s) the server
+keeps answering 200, just very slowly, and the "errors" are clients timing out. A 5xx-ratio alert would stay silent
+during exactly the incident we care about; latency does not.
+
+Threshold: stable p95 is ~220 ms; at collapse it is ~10 s. 0.5 s is ~2.3x the stable value, the same number the
+k6 load test enforces, and `for: 2m` ignores the seconds an HPA scale-out step spends above one pod's capacity.
+When there is no traffic histogram_quantile returns NaN, NaN > 0.5 is false, so the alert does not fire at idle.
+*/ -}}
+{{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "quote-api.fullname" . }}
+  labels:
+    {{- include "quote-api.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: quote-api
+      rules:
+        - alert: QuoteApiHighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum by (le) (rate(http_request_duration_seconds_bucket{namespace="{{ .Release.Namespace }}",path="/api/quote"}[2m]))
+            ) > {{ .Values.alert.p95Seconds }}
+          for: {{ .Values.alert.for }}
+          labels:
+            severity: warning
+          annotations:
+            summary: "quote-api p95 latency is above {{ .Values.alert.p95Seconds }}s"
+            description: "p95 of /api/quote has been {{ "{{ $value | humanizeDuration }}" }} for more than {{ .Values.alert.for }}. Check the HPA (replicas, CPU) and CPU throttling."
+{{- end }}

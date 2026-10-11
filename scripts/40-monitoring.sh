@@ -16,6 +16,11 @@ helm upgrade --install "$RELEASE" prometheus-community/kube-prometheus-stack \
   --values /workspace/monitoring/kps-values.yaml \
   --wait --timeout 10m
 
+# The dashboard JSON in the repo is the single source: wrap it in a ConfigMap labelled for Grafana's sidecar.
+log "loading the quote-api dashboard (ConfigMap labelled grafana_dashboard=1)"
+kubectl -n monitoring create configmap quote-api-dashboard --from-file=quote-api.json=/workspace/monitoring/dashboard.json \
+  --dry-run=client -o yaml | kubectl label --local -f - grafana_dashboard=1 -o yaml | kubectl apply -f - >/dev/null
+
 # ArgoCD caches the cluster's API list. The app chart renders its ServiceMonitor only when the
 # monitoring.coreos.com API exists, so the cache must be refreshed after the CRDs appear.
 if kubectl -n argocd get application quote-api >/dev/null 2>&1; then
