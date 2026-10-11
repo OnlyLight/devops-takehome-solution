@@ -54,8 +54,20 @@ func TestQuoteReturnsJSONAndBurnsCPU(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil || body["quote"] == "" {
 		t.Fatalf("bad body %q: %v", rec.Body.String(), err)
 	}
-	if elapsed < workDuration {
-		t.Fatalf("took %v, want >= %v of simulated work", elapsed, workDuration)
+	// The work is calibrated, not timed, so allow slack on both sides (CI machines are noisy).
+	if elapsed < workDuration/2 || elapsed > 20*workDuration {
+		t.Fatalf("took %v, want roughly %v of CPU work", elapsed, workDuration)
+	}
+}
+
+func TestCalibrationGivesPositiveFixedWork(t *testing.T) {
+	if workIters <= 0 {
+		t.Fatalf("workIters = %d, want > 0", workIters)
+	}
+	// The amount of work must not depend on how long a call happens to take.
+	t.Setenv("WORK_ITERATIONS", "12345")
+	if got := calibrate(); got != 12345 {
+		t.Fatalf("calibrate() with WORK_ITERATIONS=12345 = %d", got)
 	}
 }
 

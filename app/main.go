@@ -7,10 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"strconv"
 	"sync/atomic"
 	"syscall"
@@ -20,8 +22,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// workDuration is the simulated CPU cost of one /api/quote request.
+// workDuration is the CPU cost of one /api/quote request on an unthrottled core.
 const workDuration = 100 * time.Millisecond
+
+// workIters is the number of chained SHA-256 rounds that take about workDuration of CPU on this machine.
+// It is measured once at start-up (see calibrate). Each request does exactly this much WORK, not "spin for
+// 100ms of wall clock": under a CPU limit (CFS throttling) the same work takes longer, so latency rises and
+// throughput per pod is capped by CPU, as with a real CPU-bound handler. A wall-clock spin would hide that.
+var workIters = calibrate()
 
 var quotes = []string{
 	"The only way to do great work is to love what you do.",
@@ -62,14 +70,53 @@ func newServer() *server {
 	return s
 }
 
-// burnCPU spins on SHA-256 until d has elapsed, so the cost is real CPU (not a sleep)
-// and the service saturates under load the way a CPU-bound API would.
-func burnCPU(d time.Duration) {
+// hashLoop does n chained SHA-256 rounds: a fixed amount of real CPU work (not a sleep).
+func hashLoop(n int) {
 	buf := []byte("quote-api")
-	for deadline := time.Now().Add(d); time.Now().Before(deadline); {
+	for i := 0; i < n; i++ {
 		sum := sha256.Sum256(buf)
 		buf = sum[:]
 	}
+	runtime.KeepAlive(buf)
+}
+
+// calibrate returns how many hashLoop rounds take about workDuration of CPU. It times many short batches and
+// keeps the FASTEST one: throttling or preemption can only make a batch slower, so the minimum is the closest
+// to the unthrottled speed. WORK_ITERATIONS overrides it (tests, or pinning the work across nodes).
+func calibrate() int {
+	if v, err := strconv.Atoi(os.Getenv("WORK_ITERATIONS")); err == nil && v > 0 {
+		return v
+	}
+	const batch = 100000 // ~10ms: long enough for a coarse clock (Windows), short enough to fit a CFS quota slice
+	best := time.Duration(math.MaxInt64)
+	for i := 0; i < 12; i++ {
+		start := time.Now()
+		hashLoop(batch)
+		if d := time.Since(start); d > 0 && d < best { // d == 0: the clock did not tick during the batch
+			best = d
+		}
+	}
+	iters := 0
+	if best < time.Duration(math.MaxInt64) {
+		iters = int(float64(batch) * float64(workDuration) / float64(best))
+	} else {
+		// Clock too coarse for short batches: time one long run instead (error bounded by the clock tick).
+		const long = 1000000
+		start := time.Now()
+		hashLoop(long)
+		if d := time.Since(start); d > 0 {
+			iters = int(float64(long) * float64(workDuration) / float64(d))
+		}
+	}
+	// Never return something absurd (a stalled machine at start-up must not skew the work for the pod's lifetime).
+	const lo, hi = 10000, 50000000
+	if iters < lo {
+		iters = lo
+	}
+	if iters > hi {
+		iters = hi
+	}
+	return iters
 }
 
 type statusRecorder struct {
@@ -108,7 +155,7 @@ func (s *server) mux() *http.ServeMux {
 		_, _ = w.Write([]byte("ready"))
 	}))
 	m.HandleFunc("/api/quote", s.instrument("/api/quote", func(w http.ResponseWriter, _ *http.Request) {
-		burnCPU(workDuration)
+		hashLoop(workIters)
 		s.quoteTotal.Inc()
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]string{"quote": quotes[rand.Intn(len(quotes))]})
@@ -126,6 +173,7 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
+	log.Printf("calibrated: %d SHA-256 rounds per /api/quote request (~%v of CPU)", workIters, workDuration)
 	s.ready.Store(true)
 	go func() {
 		log.Printf("listening on %s", addr)
