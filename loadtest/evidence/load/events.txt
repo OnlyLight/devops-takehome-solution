@@ -1,0 +1,28 @@
+34m         Normal    ScalingReplicaSet   deployment/quote-api                Scaled up replica set quote-api-d8557b786 from 4 to 6
+25m         Normal    SuccessfulRescale   horizontalpodautoscaler/quote-api   New size: 5; reason: All metrics below target
+25m         Normal    ScalingReplicaSet   deployment/quote-api                Scaled down replica set quote-api-d8557b786 from 8 to 5
+25m         Normal    ScalingReplicaSet   deployment/quote-api                Scaled down replica set quote-api-d8557b786 from 5 to 3
+20m         Normal    ScalingReplicaSet   deployment/quote-api                Scaled up replica set quote-api-d8557b786 from 3 to 5
+20m         Normal    ScalingReplicaSet   deployment/quote-api                Scaled up replica set quote-api-d8557b786 from 5 to 7
+20m         Normal    SuccessfulRescale   horizontalpodautoscaler/quote-api   New size: 7; reason: cpu resource utilization (percentage of request) above target
+19m         Normal    ScalingReplicaSet   deployment/quote-api                Scaled up replica set quote-api-d8557b786 from 7 to 8
+7m55s       Normal    SuccessfulRescale   horizontalpodautoscaler/quote-api   New size: 3; reason: All metrics below target
+7m55s       Normal    ScalingReplicaSet   deployment/quote-api                Scaled down replica set quote-api-d8557b786 from 8 to 3
+4m39s       Normal    ScalingReplicaSet   deployment/quote-api                Scaled up replica set quote-api-d8557b786 from 3 to 4
+4m39s       Normal    SuccessfulRescale   horizontalpodautoscaler/quote-api   New size: 4; reason: cpu resource utilization (percentage of request) above target
+4m9s        Normal    ScalingReplicaSet   deployment/quote-api                Scaled up replica set quote-api-d8557b786 from 4 to 5
+4m9s        Normal    SuccessfulRescale   horizontalpodautoscaler/quote-api   New size: 5; reason: cpu resource utilization (percentage of request) above target
+2m39s       Normal    ScalingReplicaSet   deployment/quote-api                Scaled up replica set quote-api-d8557b786 from 5 to 6
+2m39s       Normal    SuccessfulRescale   horizontalpodautoscaler/quote-api   New size: 6; reason: cpu resource utilization (percentage of request) above target
+2m24s       Normal    ScalingReplicaSet   deployment/quote-api                Scaled up replica set quote-api-d8557b786 from 6 to 8
+2m24s       Normal    SuccessfulRescale   horizontalpodautoscaler/quote-api   New size: 8; reason: cpu resource utilization (percentage of request) above target
+Events:
+  Type    Reason             Age                  From                       Message
+  ----    ------             ----                 ----                       -------
+  Normal  SuccessfulRescale  25m                  horizontal-pod-autoscaler  New size: 5; reason: All metrics below target
+  Normal  SuccessfulRescale  20m                  horizontal-pod-autoscaler  New size: 7; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  7m55s (x3 over 24h)  horizontal-pod-autoscaler  New size: 3; reason: All metrics below target
+  Normal  SuccessfulRescale  4m39s (x3 over 24h)  horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  4m9s (x2 over 20m)   horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  2m39s (x2 over 34m)  horizontal-pod-autoscaler  New size: 6; reason: cpu resource utilization (percentage of request) above target
+  Normal  SuccessfulRescale  2m24s (x3 over 32m)  horizontal-pod-autoscaler  New size: 8; reason: cpu resource utilization (percentage of request) above target

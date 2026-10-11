@@ -14,23 +14,27 @@ require_cluster
 
 NS=quote-api
 PROFILE="${PROFILE:-load}"
-EV=/workspace/loadtest/evidence
+EV="/workspace/loadtest/evidence/$PROFILE"   # one folder per profile, so a later run never overwrites an earlier one
 mkdir -p "$EV"
 
 kubectl -n argocd get application quote-api -o jsonpath='{.status.health.status}' 2>/dev/null | grep -q Healthy \
   || die "the app is not Healthy in ArgoCD; run scripts/20-deploy.sh first"
 MIN=$(kubectl -n "$NS" get hpa quote-api -o jsonpath='{.spec.minReplicas}')
 
-# "<current>\t<desired>\t<cpu%>\t<spot>\t<on-demand>\t<other>\t<pending>" for the app right now
+# "<current>\t<desired>\t<cpu%>\t<spot>\t<on-demand>\t<other>\t<pending>\t<alert>" for the app right now.
+# <alert> is the state of QuoteApiHighLatency (inactive | pending | firing), read through the API server's service
+# proxy, so no extra pod is needed and it is fast enough to sample every few seconds.
 snapshot() {
-  local hpa nodes
+  local hpa nodes alert
   hpa=$(kubectl -n "$NS" get hpa quote-api -o jsonpath='{.status.currentReplicas}{"\t"}{.status.desiredReplicas}{"\t"}{.status.currentMetrics[0].resource.current.averageUtilization}' 2>/dev/null || true)
+  alert=$(kubectl get --raw "/api/v1/namespaces/monitoring/services/kps-kube-prometheus-stack-prometheus:9090/proxy/api/v1/alerts" 2>/dev/null \
+    | jq -r '[.data.alerts[]? | select(.labels.alertname == "QuoteApiHighLatency") | .state] | (first // "inactive")' 2>/dev/null || true)
   nodes=$(kubectl get nodes -o json)
-  printf '%s\t%s\n' "${hpa:-?}" "$(kubectl -n "$NS" get pods -l app.kubernetes.io/name=quote-api -o json | jq -r --argjson n "$nodes" '
+  printf '%s\t%s\t%s\n' "${hpa:-?}" "$(kubectl -n "$NS" get pods -l app.kubernetes.io/name=quote-api -o json | jq -r --argjson n "$nodes" '
     ($n.items | map({(.metadata.name): (.metadata.labels["acme.io/capacity"] // "other")}) | add) as $m
     | [.items[] | select(.metadata.deletionTimestamp | not) | (if .spec.nodeName then $m[.spec.nodeName] else "pending" end)]
     | [(map(select(. == "spot")) | length), (map(select(. == "on-demand")) | length),
-       (map(select(. == "other")) | length), (map(select(. == "pending")) | length)] | @tsv')"
+       (map(select(. == "other")) | length), (map(select(. == "pending")) | length)] | @tsv')" "${alert:-?}"
 }
 
 # Start from a quiet HPA so the evidence shows the whole scale-out (scale-down waits ~5 min after load).
@@ -49,7 +53,7 @@ trap cleanup EXIT
 # 1) the raw "kubectl get hpa -w" stream, 2) a timestamped sample every 5 s that also counts pods per nodepool
 kubectl -n "$NS" get hpa quote-api -w >"$EV/hpa-watch.txt" 2>&1 &
 WATCH=$!
-printf 'time\tcurrent\tdesired\tcpu%%\tspot\ton-demand\tother\tpending\n' >"$EV/hpa-timeline.tsv"
+printf 'time\tcurrent\tdesired\tcpu%%\tspot\ton-demand\tother\tpending\talert\n' >"$EV/hpa-timeline.tsv"
 ( while :; do printf '%s\t%s\n' "$(date +%T)" "$(snapshot)" >>"$EV/hpa-timeline.tsv"; sleep 5; done ) &
 LOOP=$!
 
@@ -62,7 +66,9 @@ k6 run -e PROFILE="$PROFILE" -e BASE_URL="$INGRESS_URL" \
 K6_RC=${PIPESTATUS[0]}
 set -e
 log "<<< LOAD ENDED $(date +%T)  (k6 exit code $K6_RC)"
-sleep 10
+# The alert looks at a 2-minute window, so after an overload it keeps evaluating the slow requests for ~2 more minutes:
+# keep sampling long enough to see it go pending -> firing -> inactive.
+if [ "$PROFILE" = stress ]; then log "stress: observing the alert for 4 more minutes"; sleep 240; else sleep 10; fi
 snapshot_line=$(snapshot); printf '%s\t%s\n' "$(date +%T)" "$snapshot_line" >>"$EV/hpa-timeline.tsv"
 cleanup; LOOP=""; WATCH=""
 
@@ -74,12 +80,15 @@ kubectl -n "$NS" describe hpa quote-api | sed -n '/^Events:/,$p' >>"$EV/events.t
 MAXREP=$(awk -F'\t' 'NR>1 && $2 ~ /^[0-9]+$/ {if ($2>m) m=$2} END {print m+0}' "$EV/hpa-timeline.tsv")
 PEAK=$(awk -F'\t' -v m="$MAXREP" 'NR>1 && $2==m {print "spot=" $5 " on-demand=" $6 " pending=" $8; exit}' "$EV/hpa-timeline.tsv")
 OTHER=$(awk -F'\t' 'NR>1 && $7 ~ /^[0-9]+$/ {if ($7>m) m=$7} END {print m+0}' "$EV/hpa-timeline.tsv")
+PENDING_AT=$(awk -F'\t' 'NR>1 && $9=="pending" {print $1; exit}' "$EV/hpa-timeline.tsv")
+FIRING_AT=$(awk -F'\t' 'NR>1 && $9=="firing" {print $1; exit}' "$EV/hpa-timeline.tsv")
 
 echo
-log "HPA timeline (changes only; full file: loadtest/evidence/hpa-timeline.tsv):"
-awk -F'\t' 'NR==1 {print; next} {k=$2 FS $3 FS $5 FS $6; if (k != p) print; p=k}' "$EV/hpa-timeline.tsv"
+log "timeline (changes only; full file: loadtest/evidence/$PROFILE/hpa-timeline.tsv):"
+awk -F'\t' 'NR==1 {print; next} {k=$2 FS $3 FS $5 FS $6 FS $9; if (k != p) print; p=k}' "$EV/hpa-timeline.tsv"
 echo
 log "peak replicas: $MAXREP ($PEAK); minReplicas: $MIN; most pods ever on a node without a capacity label: $OTHER"
+log "alert QuoteApiHighLatency: pending at ${PENDING_AT:--}, firing at ${FIRING_AT:--}"
 log "final placement (pod -> node -> capacity):"
 placement_table
 
@@ -89,5 +98,9 @@ if [ "$PROFILE" != smoke ]; then
   [ "$MAXREP" -gt "$MIN" ] || { warn "the HPA never scaled above minReplicas ($MIN)"; rc=1; }
 fi
 [ "$OTHER" = 0 ] || { warn "a replica ran on a node without a capacity label (gpu/control-plane)"; rc=1; }
+# The stress profile is how the alert is shown to fire; the other profiles only report what happened.
+if [ "$PROFILE" = stress ]; then
+  [ -n "$FIRING_AT" ] || { warn "the QuoteApiHighLatency alert never reached 'firing' during the stress run"; rc=1; }
+fi
 [ "$rc" = 0 ] && log "LOAD TEST PASSED ($PROFILE)" || warn "LOAD TEST FAILED ($PROFILE)"
 exit "$rc"

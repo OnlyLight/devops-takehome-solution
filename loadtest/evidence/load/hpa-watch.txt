@@ -1,0 +1,26 @@
+NAME        REFERENCE              TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+quote-api   Deployment/quote-api   cpu: 0%/60%   3         8         3          25h
+quote-api   Deployment/quote-api   cpu: 2%/60%   3         8         3          25h
+quote-api   Deployment/quote-api   cpu: 21%/60%   3         8         3          25h
+quote-api   Deployment/quote-api   cpu: 28%/60%   3         8         3          25h
+quote-api   Deployment/quote-api   cpu: 42%/60%   3         8         3          25h
+quote-api   Deployment/quote-api   cpu: 56%/60%   3         8         3          25h
+quote-api   Deployment/quote-api   cpu: 72%/60%   3         8         3          25h
+quote-api   Deployment/quote-api   cpu: 78%/60%   3         8         4          25h
+quote-api   Deployment/quote-api   cpu: 67%/60%   3         8         4          25h
+quote-api   Deployment/quote-api   cpu: 63%/60%   3         8         5          25h
+quote-api   Deployment/quote-api   cpu: 57%/60%   3         8         5          25h
+quote-api   Deployment/quote-api   cpu: 55%/60%   3         8         5          25h
+quote-api   Deployment/quote-api   cpu: 55%/60%   3         8         5          25h
+quote-api   Deployment/quote-api   cpu: 56%/60%   3         8         5          25h
+quote-api   Deployment/quote-api   cpu: 71%/60%   3         8         5          25h
+quote-api   Deployment/quote-api   cpu: 95%/60%   3         8         6          25h
+quote-api   Deployment/quote-api   cpu: 99%/60%   3         8         8          25h
+quote-api   Deployment/quote-api   cpu: 97%/60%   3         8         8          25h
+quote-api   Deployment/quote-api   cpu: 97%/60%   3         8         8          25h
+quote-api   Deployment/quote-api   cpu: 99%/60%   3         8         8          25h
+quote-api   Deployment/quote-api   cpu: 99%/60%   3         8         8          25h
+quote-api   Deployment/quote-api   cpu: 97%/60%   3         8         8          25h
+quote-api   Deployment/quote-api   cpu: 98%/60%   3         8         8          25h
+quote-api   Deployment/quote-api   cpu: 97%/60%   3         8         8          25h
+quote-api   Deployment/quote-api   cpu: 58%/60%   3         8         8          25h

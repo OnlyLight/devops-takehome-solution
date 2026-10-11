@@ -44,6 +44,8 @@ const profiles = {
     { duration: '60s', target: 30 },
     { duration: '60s', target: 40 },
     { duration: '60s', target: 50 },
+    // Hold well past capacity (8 pods ~ 32 req/s): the latency alert needs p95 > 0.5 s for 2 minutes over a 2-minute window.
+    { duration: '180s', target: 50 },
   ],
 };
 if (!profiles[PROFILE]) {

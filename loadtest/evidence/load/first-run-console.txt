@@ -1,0 +1,803 @@
+[60-loadtest.sh] waiting for the app to be at minReplicas=3 before starting (HPA scale-down can take ~5 min)
+[60-loadtest.sh] start state: replicas=3 cpu%=0 spot=2 on-demand=1
+[60-loadtest.sh] >>> LOAD STARTED 15:48:16  profile=load. Take the Grafana screenshot now (http://grafana.localhost:8080, 'Last 15 minutes').
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /workspace/loadtest/k6.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 800 max VUs, 6m30s max duration (incl. graceful stop):
+              * ramp: Up to 20.00 iterations/s for 6m0s over 6 stages (maxVUs: 100-800, gracefulStop: 30s)
+
+
+ramp   [   0% ] 001/100 VUs  0m01.0s/6m0s  01.10 iters/s
+
+ramp   [   1% ] 001/100 VUs  0m02.0s/6m0s  01.15 iters/s
+
+ramp   [   1% ] 000/100 VUs  0m03.0s/6m0s  01.21 iters/s
+
+ramp   [   1% ] 000/100 VUs  0m04.0s/6m0s  01.26 iters/s
+
+ramp   [   1% ] 000/100 VUs  0m05.0s/6m0s  01.32 iters/s
+
+ramp   [   2% ] 001/100 VUs  0m06.0s/6m0s  01.41 iters/s
+
+ramp   [   2% ] 000/100 VUs  0m07.0s/6m0s  01.46 iters/s
+
+ramp   [   2% ] 001/100 VUs  0m08.0s/6m0s  01.55 iters/s
+
+ramp   [   2% ] 000/100 VUs  0m09.0s/6m0s  01.59 iters/s
+
+ramp   [   3% ] 001/100 VUs  0m10.0s/6m0s  01.67 iters/s
+
+ramp   [   3% ] 000/100 VUs  0m11.0s/6m0s  01.71 iters/s
+
+ramp   [   3% ] 000/100 VUs  0m12.0s/6m0s  01.79 iters/s
+
+ramp   [   4% ] 000/100 VUs  0m13.0s/6m0s  01.86 iters/s
+
+ramp   [   4% ] 000/100 VUs  0m14.0s/6m0s  01.93 iters/s
+
+ramp   [   4% ] 001/100 VUs  0m15.0s/6m0s  02.00 iters/s
+
+ramp   [   4% ] 000/100 VUs  0m16.0s/6m0s  02.07 iters/s
+
+ramp   [   5% ] 000/100 VUs  0m17.0s/6m0s  02.13 iters/s
+
+ramp   [   5% ] 000/100 VUs  0m18.0s/6m0s  02.19 iters/s
+
+ramp   [   5% ] 000/100 VUs  0m19.0s/6m0s  02.25 iters/s
+
+ramp   [   6% ] 001/100 VUs  0m20.0s/6m0s  02.34 iters/s
+
+ramp   [   6% ] 000/100 VUs  0m21.0s/6m0s  02.39 iters/s
+
+ramp   [   6% ] 001/100 VUs  0m22.0s/6m0s  02.48 iters/s
+
+ramp   [   6% ] 000/100 VUs  0m23.0s/6m0s  02.53 iters/s
+
+ramp   [   7% ] 001/100 VUs  0m24.0s/6m0s  02.61 iters/s
+
+ramp   [   7% ] 000/100 VUs  0m25.0s/6m0s  02.66 iters/s
+
+ramp   [   7% ] 001/100 VUs  0m26.0s/6m0s  02.73 iters/s
+
+ramp   [   7% ] 001/100 VUs  0m27.0s/6m0s  02.80 iters/s
+
+ramp   [   8% ] 001/100 VUs  0m28.0s/6m0s  02.88 iters/s
+
+ramp   [   8% ] 000/100 VUs  0m29.0s/6m0s  02.92 iters/s
+
+ramp   [   8% ] 000/100 VUs  0m30.0s/6m0s  02.99 iters/s
+
+ramp   [   9% ] 000/100 VUs  0m31.0s/6m0s  03.07 iters/s
+
+ramp   [   9% ] 001/100 VUs  0m32.0s/6m0s  03.18 iters/s
+
+ramp   [   9% ] 001/100 VUs  0m33.0s/6m0s  03.25 iters/s
+
+ramp   [   9% ] 000/100 VUs  0m34.0s/6m0s  03.33 iters/s
+
+ramp   [  10% ] 000/100 VUs  0m35.0s/6m0s  03.40 iters/s
+
+ramp   [  10% ] 001/100 VUs  0m36.0s/6m0s  03.50 iters/s
+
+ramp   [  10% ] 000/100 VUs  0m37.0s/6m0s  03.57 iters/s
+
+ramp   [  11% ] 001/100 VUs  0m38.0s/6m0s  03.66 iters/s
+
+ramp   [  11% ] 001/100 VUs  0m39.0s/6m0s  03.75 iters/s
+
+ramp   [  11% ] 001/100 VUs  0m40.0s/6m0s  03.84 iters/s
+
+ramp   [  11% ] 000/100 VUs  0m41.0s/6m0s  03.91 iters/s
+
+ramp   [  12% ] 000/100 VUs  0m42.0s/6m0s  03.99 iters/s
+
+ramp   [  12% ] 000/100 VUs  0m43.0s/6m0s  04.07 iters/s
+
+ramp   [  12% ] 001/100 VUs  0m44.0s/6m0s  04.17 iters/s
+
+ramp   [  12% ] 001/100 VUs  0m45.0s/6m0s  04.25 iters/s
+
+ramp   [  13% ] 001/100 VUs  0m46.0s/6m0s  04.33 iters/s
+
+ramp   [  13% ] 000/100 VUs  0m47.0s/6m0s  04.41 iters/s
+
+ramp   [  13% ] 001/100 VUs  0m48.0s/6m0s  04.50 iters/s
+
+ramp   [  14% ] 000/100 VUs  0m49.0s/6m0s  04.57 iters/s
+
+ramp   [  14% ] 001/100 VUs  0m50.0s/6m0s  04.66 iters/s
+
+ramp   [  14% ] 001/100 VUs  0m51.0s/6m0s  04.75 iters/s
+
+ramp   [  14% ] 002/100 VUs  0m52.0s/6m0s  04.84 iters/s
+
+ramp   [  15% ] 001/100 VUs  0m53.0s/6m0s  04.91 iters/s
+
+ramp   [  15% ] 001/100 VUs  0m54.0s/6m0s  04.99 iters/s
+
+ramp   [  15% ] 000/100 VUs  0m55.0s/6m0s  05.07 iters/s
+
+ramp   [  16% ] 002/100 VUs  0m56.0s/6m0s  05.17 iters/s
+
+ramp   [  16% ] 001/100 VUs  0m57.0s/6m0s  05.25 iters/s
+
+ramp   [  16% ] 001/100 VUs  0m58.0s/6m0s  05.33 iters/s
+
+ramp   [  16% ] 000/100 VUs  0m59.0s/6m0s  05.41 iters/s
+
+ramp   [  17% ] 001/100 VUs  1m00.0s/6m0s  05.50 iters/s
+
+ramp   [  17% ] 000/100 VUs  1m01.0s/6m0s  05.58 iters/s
+
+ramp   [  17% ] 001/100 VUs  1m02.0s/6m0s  05.66 iters/s
+
+ramp   [  17% ] 001/100 VUs  1m03.0s/6m0s  05.75 iters/s
+
+ramp   [  18% ] 002/100 VUs  1m04.0s/6m0s  05.84 iters/s
+
+ramp   [  18% ] 001/100 VUs  1m05.0s/6m0s  05.91 iters/s
+
+ramp   [  18% ] 001/100 VUs  1m06.0s/6m0s  05.99 iters/s
+
+ramp   [  19% ] 001/100 VUs  1m07.0s/6m0s  06.08 iters/s
+
+ramp   [  19% ] 001/100 VUs  1m08.0s/6m0s  06.17 iters/s
+
+ramp   [  19% ] 001/100 VUs  1m09.0s/6m0s  06.25 iters/s
+
+ramp   [  19% ] 001/100 VUs  1m10.0s/6m0s  06.33 iters/s
+
+ramp   [  20% ] 001/100 VUs  1m11.0s/6m0s  06.41 iters/s
+
+ramp   [  20% ] 002/100 VUs  1m12.0s/6m0s  06.50 iters/s
+
+ramp   [  20% ] 001/100 VUs  1m13.0s/6m0s  06.58 iters/s
+
+ramp   [  21% ] 001/100 VUs  1m14.0s/6m0s  06.66 iters/s
+
+ramp   [  21% ] 001/100 VUs  1m15.0s/6m0s  06.75 iters/s
+
+ramp   [  21% ] 002/100 VUs  1m16.0s/6m0s  06.84 iters/s
+
+ramp   [  21% ] 001/100 VUs  1m17.0s/6m0s  06.91 iters/s
+
+ramp   [  22% ] 001/100 VUs  1m18.0s/6m0s  06.99 iters/s
+
+ramp   [  22% ] 001/100 VUs  1m19.0s/6m0s  07.08 iters/s
+
+ramp   [  22% ] 002/100 VUs  1m20.0s/6m0s  07.17 iters/s
+
+ramp   [  22% ] 002/100 VUs  1m21.0s/6m0s  07.25 iters/s
+
+ramp   [  23% ] 002/100 VUs  1m22.0s/6m0s  07.33 iters/s
+
+ramp   [  23% ] 001/100 VUs  1m23.0s/6m0s  07.41 iters/s
+
+ramp   [  23% ] 002/100 VUs  1m24.0s/6m0s  07.50 iters/s
+
+ramp   [  24% ] 001/100 VUs  1m25.0s/6m0s  07.58 iters/s
+
+ramp   [  24% ] 001/100 VUs  1m26.0s/6m0s  07.66 iters/s
+
+ramp   [  24% ] 002/100 VUs  1m27.0s/6m0s  07.75 iters/s
+
+ramp   [  24% ] 002/100 VUs  1m28.0s/6m0s  07.84 iters/s
+
+ramp   [  25% ] 001/100 VUs  1m29.0s/6m0s  07.91 iters/s
+
+ramp   [  25% ] 001/100 VUs  1m30.0s/6m0s  07.99 iters/s
+
+ramp   [  25% ] 001/100 VUs  1m31.0s/6m0s  08.00 iters/s
+
+ramp   [  26% ] 001/100 VUs  1m32.0s/6m0s  08.00 iters/s
+
+ramp   [  26% ] 001/100 VUs  1m33.0s/6m0s  08.00 iters/s
+
+ramp   [  26% ] 002/100 VUs  1m34.0s/6m0s  08.00 iters/s
+
+ramp   [  26% ] 002/100 VUs  1m35.0s/6m0s  08.00 iters/s
+
+ramp   [  27% ] 001/100 VUs  1m36.0s/6m0s  08.00 iters/s
+
+ramp   [  27% ] 001/100 VUs  1m37.0s/6m0s  08.00 iters/s
+
+ramp   [  27% ] 001/100 VUs  1m38.0s/6m0s  08.00 iters/s
+
+ramp   [  27% ] 002/100 VUs  1m39.0s/6m0s  08.00 iters/s
+
+ramp   [  28% ] 001/100 VUs  1m40.0s/6m0s  08.00 iters/s
+
+ramp   [  28% ] 002/100 VUs  1m41.0s/6m0s  08.00 iters/s
+
+ramp   [  28% ] 001/100 VUs  1m42.0s/6m0s  08.00 iters/s
+
+ramp   [  29% ] 001/100 VUs  1m43.0s/6m0s  08.00 iters/s
+
+ramp   [  29% ] 002/100 VUs  1m44.0s/6m0s  08.00 iters/s
+
+ramp   [  29% ] 002/100 VUs  1m45.0s/6m0s  08.00 iters/s
+
+ramp   [  29% ] 001/100 VUs  1m46.0s/6m0s  08.00 iters/s
+
+ramp   [  30% ] 001/100 VUs  1m47.0s/6m0s  08.00 iters/s
+
+ramp   [  30% ] 001/100 VUs  1m48.0s/6m0s  08.00 iters/s
+
+ramp   [  30% ] 002/100 VUs  1m49.0s/6m0s  08.00 iters/s
+
+ramp   [  31% ] 002/100 VUs  1m50.0s/6m0s  08.00 iters/s
+
+ramp   [  31% ] 002/100 VUs  1m51.0s/6m0s  08.00 iters/s
+
+ramp   [  31% ] 002/100 VUs  1m52.0s/6m0s  08.00 iters/s
+
+ramp   [  31% ] 001/100 VUs  1m53.0s/6m0s  08.00 iters/s
+
+ramp   [  32% ] 001/100 VUs  1m54.0s/6m0s  08.00 iters/s
+
+ramp   [  32% ] 001/100 VUs  1m55.0s/6m0s  08.00 iters/s
+
+ramp   [  32% ] 001/100 VUs  1m56.0s/6m0s  08.00 iters/s
+
+ramp   [  32% ] 001/100 VUs  1m57.0s/6m0s  08.00 iters/s
+
+ramp   [  33% ] 001/100 VUs  1m58.0s/6m0s  08.00 iters/s
+
+ramp   [  33% ] 001/100 VUs  1m59.0s/6m0s  08.00 iters/s
+
+ramp   [  33% ] 001/100 VUs  2m00.0s/6m0s  08.00 iters/s
+
+ramp   [  34% ] 001/100 VUs  2m01.0s/6m0s  08.00 iters/s
+
+ramp   [  34% ] 001/100 VUs  2m02.0s/6m0s  08.00 iters/s
+
+ramp   [  34% ] 001/100 VUs  2m03.0s/6m0s  08.00 iters/s
+
+ramp   [  34% ] 001/100 VUs  2m04.0s/6m0s  08.00 iters/s
+
+ramp   [  35% ] 001/100 VUs  2m05.0s/6m0s  08.00 iters/s
+
+ramp   [  35% ] 001/100 VUs  2m06.0s/6m0s  08.00 iters/s
+
+ramp   [  35% ] 001/100 VUs  2m07.0s/6m0s  08.00 iters/s
+
+ramp   [  36% ] 001/100 VUs  2m08.0s/6m0s  08.00 iters/s
+
+ramp   [  36% ] 001/100 VUs  2m09.0s/6m0s  08.00 iters/s
+
+ramp   [  36% ] 001/100 VUs  2m10.0s/6m0s  08.00 iters/s
+
+ramp   [  36% ] 001/100 VUs  2m11.0s/6m0s  08.00 iters/s
+
+ramp   [  37% ] 001/100 VUs  2m12.0s/6m0s  08.00 iters/s
+
+ramp   [  37% ] 001/100 VUs  2m13.0s/6m0s  08.00 iters/s
+
+ramp   [  37% ] 001/100 VUs  2m14.0s/6m0s  08.00 iters/s
+
+ramp   [  37% ] 001/100 VUs  2m15.0s/6m0s  08.00 iters/s
+
+ramp   [  38% ] 001/100 VUs  2m16.0s/6m0s  08.00 iters/s
+
+ramp   [  38% ] 001/100 VUs  2m17.0s/6m0s  08.00 iters/s
+
+ramp   [  38% ] 001/100 VUs  2m18.0s/6m0s  08.00 iters/s
+
+ramp   [  39% ] 001/100 VUs  2m19.0s/6m0s  08.00 iters/s
+
+ramp   [  39% ] 001/100 VUs  2m20.0s/6m0s  08.00 iters/s
+
+ramp   [  39% ] 001/100 VUs  2m21.0s/6m0s  08.00 iters/s
+
+ramp   [  39% ] 001/100 VUs  2m22.0s/6m0s  08.00 iters/s
+
+ramp   [  40% ] 001/100 VUs  2m23.0s/6m0s  08.00 iters/s
+
+ramp   [  40% ] 001/100 VUs  2m24.0s/6m0s  08.00 iters/s
+
+ramp   [  40% ] 001/100 VUs  2m25.0s/6m0s  08.00 iters/s
+
+ramp   [  41% ] 001/100 VUs  2m26.0s/6m0s  08.00 iters/s
+
+ramp   [  41% ] 001/100 VUs  2m27.0s/6m0s  08.00 iters/s
+
+ramp   [  41% ] 001/100 VUs  2m28.0s/6m0s  08.00 iters/s
+
+ramp   [  41% ] 001/100 VUs  2m29.0s/6m0s  08.00 iters/s
+
+ramp   [  42% ] 001/100 VUs  2m30.0s/6m0s  08.00 iters/s
+
+ramp   [  42% ] 001/100 VUs  2m31.0s/6m0s  08.00 iters/s
+
+ramp   [  42% ] 001/100 VUs  2m32.0s/6m0s  08.00 iters/s
+
+ramp   [  42% ] 001/100 VUs  2m33.0s/6m0s  08.00 iters/s
+
+ramp   [  43% ] 001/100 VUs  2m34.0s/6m0s  08.00 iters/s
+
+ramp   [  43% ] 001/100 VUs  2m35.0s/6m0s  08.00 iters/s
+
+ramp   [  43% ] 001/100 VUs  2m36.0s/6m0s  08.00 iters/s
+
+ramp   [  44% ] 001/100 VUs  2m37.0s/6m0s  08.00 iters/s
+
+ramp   [  44% ] 001/100 VUs  2m38.0s/6m0s  08.00 iters/s
+
+ramp   [  44% ] 001/100 VUs  2m39.0s/6m0s  08.00 iters/s
+
+ramp   [  44% ] 001/100 VUs  2m40.0s/6m0s  08.00 iters/s
+
+ramp   [  45% ] 001/100 VUs  2m41.0s/6m0s  08.00 iters/s
+
+ramp   [  45% ] 001/100 VUs  2m42.0s/6m0s  08.00 iters/s
+
+ramp   [  45% ] 001/100 VUs  2m43.0s/6m0s  08.00 iters/s
+
+ramp   [  46% ] 001/100 VUs  2m44.0s/6m0s  08.00 iters/s
+
+ramp   [  46% ] 001/100 VUs  2m45.0s/6m0s  08.00 iters/s
+
+ramp   [  46% ] 001/100 VUs  2m46.0s/6m0s  08.00 iters/s
+
+ramp   [  46% ] 001/100 VUs  2m47.0s/6m0s  08.00 iters/s
+
+ramp   [  47% ] 001/100 VUs  2m48.0s/6m0s  08.00 iters/s
+
+ramp   [  47% ] 001/100 VUs  2m49.0s/6m0s  08.00 iters/s
+
+ramp   [  47% ] 001/100 VUs  2m50.0s/6m0s  08.00 iters/s
+
+ramp   [  47% ] 002/100 VUs  2m51.0s/6m0s  08.00 iters/s
+
+ramp   [  48% ] 001/100 VUs  2m52.0s/6m0s  08.00 iters/s
+
+ramp   [  48% ] 001/100 VUs  2m53.0s/6m0s  08.00 iters/s
+
+ramp   [  48% ] 001/100 VUs  2m54.0s/6m0s  08.00 iters/s
+
+ramp   [  49% ] 001/100 VUs  2m55.0s/6m0s  08.00 iters/s
+
+ramp   [  49% ] 001/100 VUs  2m56.0s/6m0s  08.00 iters/s
+
+ramp   [  49% ] 001/100 VUs  2m57.0s/6m0s  08.00 iters/s
+
+ramp   [  49% ] 001/100 VUs  2m58.0s/6m0s  08.00 iters/s
+
+ramp   [  50% ] 001/100 VUs  2m59.0s/6m0s  08.00 iters/s
+
+ramp   [  50% ] 001/100 VUs  3m00.0s/6m0s  08.00 iters/s
+
+ramp   [  50% ] 001/100 VUs  3m01.0s/6m0s  08.19 iters/s
+
+ramp   [  51% ] 002/100 VUs  3m02.0s/6m0s  08.40 iters/s
+
+ramp   [  51% ] 001/100 VUs  3m03.0s/6m0s  08.59 iters/s
+
+ramp   [  51% ] 002/100 VUs  3m04.0s/6m0s  08.80 iters/s
+
+ramp   [  51% ] 002/100 VUs  3m05.0s/6m0s  09.00 iters/s
+
+ramp   [  52% ] 003/100 VUs  3m06.0s/6m0s  09.20 iters/s
+
+ramp   [  52% ] 002/100 VUs  3m07.0s/6m0s  09.39 iters/s
+
+ramp   [  52% ] 002/100 VUs  3m08.0s/6m0s  09.60 iters/s
+
+ramp   [  52% ] 002/100 VUs  3m09.0s/6m0s  09.79 iters/s
+
+ramp   [  53% ] 002/100 VUs  3m10.0s/6m0s  09.99 iters/s
+
+ramp   [  53% ] 002/100 VUs  3m11.0s/6m0s  10.19 iters/s
+
+ramp   [  53% ] 002/100 VUs  3m12.0s/6m0s  10.40 iters/s
+
+ramp   [  54% ] 002/100 VUs  3m13.0s/6m0s  10.59 iters/s
+
+ramp   [  54% ] 003/100 VUs  3m14.0s/6m0s  10.80 iters/s
+
+ramp   [  54% ] 003/100 VUs  3m15.0s/6m0s  11.00 iters/s
+
+ramp   [  54% ] 003/100 VUs  3m16.0s/6m0s  11.20 iters/s
+
+ramp   [  55% ] 002/100 VUs  3m17.0s/6m0s  11.39 iters/s
+
+ramp   [  55% ] 003/100 VUs  3m18.0s/6m0s  11.60 iters/s
+
+ramp   [  55% ] 002/100 VUs  3m19.0s/6m0s  11.79 iters/s
+
+ramp   [  56% ] 003/100 VUs  3m20.0s/6m0s  11.99 iters/s
+
+ramp   [  56% ] 002/100 VUs  3m21.0s/6m0s  12.19 iters/s
+
+ramp   [  56% ] 003/100 VUs  3m22.0s/6m0s  12.40 iters/s
+
+ramp   [  56% ] 002/100 VUs  3m23.0s/6m0s  12.59 iters/s
+
+ramp   [  57% ] 004/100 VUs  3m24.0s/6m0s  12.80 iters/s
+
+ramp   [  57% ] 004/100 VUs  3m25.0s/6m0s  13.00 iters/s
+
+ramp   [  57% ] 004/100 VUs  3m26.0s/6m0s  13.20 iters/s
+
+ramp   [  57% ] 003/100 VUs  3m27.0s/6m0s  13.39 iters/s
+
+ramp   [  58% ] 003/100 VUs  3m28.0s/6m0s  13.60 iters/s
+
+ramp   [  58% ] 003/100 VUs  3m29.0s/6m0s  13.79 iters/s
+
+ramp   [  58% ] 004/100 VUs  3m30.0s/6m0s  13.99 iters/s
+
+ramp   [  59% ] 003/100 VUs  3m31.0s/6m0s  14.19 iters/s
+
+ramp   [  59% ] 004/100 VUs  3m32.0s/6m0s  14.40 iters/s
+
+ramp   [  59% ] 004/100 VUs  3m33.0s/6m0s  14.59 iters/s
+
+ramp   [  59% ] 005/100 VUs  3m34.0s/6m0s  14.80 iters/s
+
+ramp   [  60% ] 005/100 VUs  3m35.0s/6m0s  15.00 iters/s
+
+ramp   [  60% ] 004/100 VUs  3m36.0s/6m0s  15.20 iters/s
+
+ramp   [  60% ] 006/100 VUs  3m37.0s/6m0s  15.39 iters/s
+
+ramp   [  61% ] 005/100 VUs  3m38.0s/6m0s  15.60 iters/s
+
+ramp   [  61% ] 005/100 VUs  3m39.0s/6m0s  15.79 iters/s
+
+ramp   [  61% ] 003/100 VUs  3m40.0s/6m0s  15.99 iters/s
+
+ramp   [  61% ] 003/100 VUs  3m41.0s/6m0s  16.19 iters/s
+
+ramp   [  62% ] 003/100 VUs  3m42.0s/6m0s  16.40 iters/s
+
+ramp   [  62% ] 004/100 VUs  3m43.0s/6m0s  16.60 iters/s
+
+ramp   [  62% ] 004/100 VUs  3m44.0s/6m0s  16.80 iters/s
+
+ramp   [  62% ] 004/100 VUs  3m45.0s/6m0s  17.00 iters/s
+
+ramp   [  63% ] 004/100 VUs  3m46.0s/6m0s  17.20 iters/s
+
+ramp   [  63% ] 006/100 VUs  3m47.0s/6m0s  17.40 iters/s
+
+ramp   [  63% ] 006/100 VUs  3m48.0s/6m0s  17.60 iters/s
+
+ramp   [  64% ] 004/100 VUs  3m49.0s/6m0s  17.79 iters/s
+
+ramp   [  64% ] 004/100 VUs  3m50.0s/6m0s  17.99 iters/s
+
+ramp   [  64% ] 006/100 VUs  3m51.0s/6m0s  18.19 iters/s
+
+ramp   [  64% ] 006/100 VUs  3m52.0s/6m0s  18.40 iters/s
+
+ramp   [  65% ] 004/100 VUs  3m53.0s/6m0s  18.60 iters/s
+
+ramp   [  65% ] 005/100 VUs  3m54.0s/6m0s  18.80 iters/s
+
+ramp   [  65% ] 007/100 VUs  3m55.0s/6m0s  19.00 iters/s
+
+ramp   [  66% ] 005/100 VUs  3m56.0s/6m0s  19.20 iters/s
+
+ramp   [  66% ] 006/100 VUs  3m57.0s/6m0s  19.40 iters/s
+
+ramp   [  66% ] 004/100 VUs  3m58.0s/6m0s  19.59 iters/s
+
+ramp   [  66% ] 005/100 VUs  3m59.0s/6m0s  19.79 iters/s
+
+ramp   [  67% ] 006/100 VUs  4m00.0s/6m0s  19.99 iters/s
+
+ramp   [  67% ] 006/100 VUs  4m01.0s/6m0s  20.00 iters/s
+
+ramp   [  67% ] 008/100 VUs  4m02.0s/6m0s  20.00 iters/s
+
+ramp   [  67% ] 006/100 VUs  4m03.0s/6m0s  20.00 iters/s
+
+ramp   [  68% ] 007/100 VUs  4m04.0s/6m0s  20.00 iters/s
+
+ramp   [  68% ] 006/100 VUs  4m05.0s/6m0s  20.00 iters/s
+
+ramp   [  68% ] 009/100 VUs  4m06.0s/6m0s  20.00 iters/s
+
+ramp   [  69% ] 006/100 VUs  4m07.0s/6m0s  20.00 iters/s
+
+ramp   [  69% ] 004/100 VUs  4m08.0s/6m0s  20.00 iters/s
+
+ramp   [  69% ] 005/100 VUs  4m09.0s/6m0s  20.00 iters/s
+
+ramp   [  69% ] 005/100 VUs  4m10.0s/6m0s  20.00 iters/s
+
+ramp   [  70% ] 006/100 VUs  4m11.0s/6m0s  20.00 iters/s
+
+ramp   [  70% ] 007/100 VUs  4m12.0s/6m0s  20.00 iters/s
+
+ramp   [  70% ] 006/100 VUs  4m13.0s/6m0s  20.00 iters/s
+
+ramp   [  71% ] 006/100 VUs  4m14.0s/6m0s  20.00 iters/s
+
+ramp   [  71% ] 006/100 VUs  4m15.0s/6m0s  20.00 iters/s
+
+ramp   [  71% ] 006/100 VUs  4m16.0s/6m0s  20.00 iters/s
+
+ramp   [  71% ] 005/100 VUs  4m17.0s/6m0s  20.00 iters/s
+
+ramp   [  72% ] 008/100 VUs  4m18.0s/6m0s  20.00 iters/s
+
+ramp   [  72% ] 006/100 VUs  4m19.0s/6m0s  20.00 iters/s
+
+ramp   [  72% ] 007/100 VUs  4m20.0s/6m0s  20.00 iters/s
+
+ramp   [  72% ] 005/100 VUs  4m21.0s/6m0s  20.00 iters/s
+
+ramp   [  73% ] 006/100 VUs  4m22.0s/6m0s  20.00 iters/s
+
+ramp   [  73% ] 006/100 VUs  4m23.0s/6m0s  20.00 iters/s
+
+ramp   [  73% ] 007/100 VUs  4m24.0s/6m0s  20.00 iters/s
+
+ramp   [  74% ] 006/100 VUs  4m25.0s/6m0s  20.00 iters/s
+
+ramp   [  74% ] 004/100 VUs  4m26.0s/6m0s  20.00 iters/s
+
+ramp   [  74% ] 005/100 VUs  4m27.0s/6m0s  20.00 iters/s
+
+ramp   [  74% ] 005/100 VUs  4m28.0s/6m0s  20.00 iters/s
+
+ramp   [  75% ] 005/100 VUs  4m29.0s/6m0s  20.00 iters/s
+
+ramp   [  75% ] 007/100 VUs  4m30.0s/6m0s  20.00 iters/s
+
+ramp   [  75% ] 006/100 VUs  4m31.0s/6m0s  20.00 iters/s
+
+ramp   [  76% ] 004/100 VUs  4m32.0s/6m0s  20.00 iters/s
+
+ramp   [  76% ] 005/100 VUs  4m33.0s/6m0s  20.00 iters/s
+
+ramp   [  76% ] 007/100 VUs  4m34.0s/6m0s  20.00 iters/s
+
+ramp   [  76% ] 006/100 VUs  4m35.0s/6m0s  20.00 iters/s
+
+ramp   [  77% ] 006/100 VUs  4m36.0s/6m0s  20.00 iters/s
+
+ramp   [  77% ] 006/100 VUs  4m37.0s/6m0s  20.00 iters/s
+
+ramp   [  77% ] 004/100 VUs  4m38.0s/6m0s  20.00 iters/s
+
+ramp   [  77% ] 005/100 VUs  4m39.0s/6m0s  20.00 iters/s
+
+ramp   [  78% ] 005/100 VUs  4m40.0s/6m0s  20.00 iters/s
+
+ramp   [  78% ] 005/100 VUs  4m41.0s/6m0s  20.00 iters/s
+
+ramp   [  78% ] 006/100 VUs  4m42.0s/6m0s  20.00 iters/s
+
+ramp   [  79% ] 006/100 VUs  4m43.0s/6m0s  20.00 iters/s
+
+ramp   [  79% ] 004/100 VUs  4m44.0s/6m0s  20.00 iters/s
+
+ramp   [  79% ] 007/100 VUs  4m45.0s/6m0s  20.00 iters/s
+
+ramp   [  79% ] 006/100 VUs  4m46.0s/6m0s  20.00 iters/s
+
+ramp   [  80% ] 005/100 VUs  4m47.0s/6m0s  20.00 iters/s
+
+ramp   [  80% ] 006/100 VUs  4m48.0s/6m0s  20.00 iters/s
+
+ramp   [  80% ] 006/100 VUs  4m49.0s/6m0s  20.00 iters/s
+
+ramp   [  81% ] 007/100 VUs  4m50.0s/6m0s  20.00 iters/s
+
+ramp   [  81% ] 005/100 VUs  4m51.0s/6m0s  20.00 iters/s
+
+ramp   [  81% ] 004/100 VUs  4m52.0s/6m0s  20.00 iters/s
+
+ramp   [  81% ] 005/100 VUs  4m53.0s/6m0s  20.00 iters/s
+
+ramp   [  82% ] 008/100 VUs  4m54.0s/6m0s  20.00 iters/s
+
+ramp   [  82% ] 006/100 VUs  4m55.0s/6m0s  20.00 iters/s
+
+ramp   [  82% ] 007/100 VUs  4m56.0s/6m0s  20.00 iters/s
+
+ramp   [  82% ] 005/100 VUs  4m57.0s/6m0s  20.00 iters/s
+
+ramp   [  83% ] 005/100 VUs  4m58.0s/6m0s  20.00 iters/s
+
+ramp   [  83% ] 005/100 VUs  4m59.0s/6m0s  20.00 iters/s
+
+ramp   [  83% ] 007/100 VUs  5m00.0s/6m0s  20.00 iters/s
+
+ramp   [  84% ] 006/100 VUs  5m01.0s/6m0s  20.00 iters/s
+
+ramp   [  84% ] 006/100 VUs  5m02.0s/6m0s  20.00 iters/s
+
+ramp   [  84% ] 006/100 VUs  5m03.0s/6m0s  20.00 iters/s
+
+ramp   [  84% ] 006/100 VUs  5m04.0s/6m0s  20.00 iters/s
+
+ramp   [  85% ] 007/100 VUs  5m05.0s/6m0s  20.00 iters/s
+
+ramp   [  85% ] 007/100 VUs  5m06.0s/6m0s  20.00 iters/s
+
+ramp   [  85% ] 006/100 VUs  5m07.0s/6m0s  20.00 iters/s
+
+ramp   [  86% ] 004/100 VUs  5m08.0s/6m0s  20.00 iters/s
+
+ramp   [  86% ] 005/100 VUs  5m09.0s/6m0s  20.00 iters/s
+
+ramp   [  86% ] 005/100 VUs  5m10.0s/6m0s  20.00 iters/s
+
+ramp   [  86% ] 005/100 VUs  5m11.0s/6m0s  20.00 iters/s
+
+ramp   [  87% ] 006/100 VUs  5m12.0s/6m0s  20.00 iters/s
+
+ramp   [  87% ] 006/100 VUs  5m13.0s/6m0s  20.00 iters/s
+
+ramp   [  87% ] 005/100 VUs  5m14.0s/6m0s  20.00 iters/s
+
+ramp   [  87% ] 006/100 VUs  5m15.0s/6m0s  20.00 iters/s
+
+ramp   [  88% ] 005/100 VUs  5m16.0s/6m0s  20.00 iters/s
+
+ramp   [  88% ] 005/100 VUs  5m17.0s/6m0s  20.00 iters/s
+
+ramp   [  88% ] 010/100 VUs  5m18.0s/6m0s  20.00 iters/s
+
+ramp   [  89% ] 006/100 VUs  5m19.0s/6m0s  20.00 iters/s
+
+ramp   [  89% ] 006/100 VUs  5m20.0s/6m0s  20.00 iters/s
+
+ramp   [  89% ] 005/100 VUs  5m21.0s/6m0s  20.00 iters/s
+
+ramp   [  89% ] 005/100 VUs  5m22.0s/6m0s  20.00 iters/s
+
+ramp   [  90% ] 005/100 VUs  5m23.0s/6m0s  20.00 iters/s
+
+ramp   [  90% ] 007/100 VUs  5m24.0s/6m0s  20.00 iters/s
+
+ramp   [  90% ] 006/100 VUs  5m25.0s/6m0s  20.00 iters/s
+
+ramp   [  91% ] 006/100 VUs  5m26.0s/6m0s  20.00 iters/s
+
+ramp   [  91% ] 006/100 VUs  5m27.0s/6m0s  20.00 iters/s
+
+ramp   [  91% ] 006/100 VUs  5m28.0s/6m0s  20.00 iters/s
+
+ramp   [  91% ] 005/100 VUs  5m29.0s/6m0s  20.00 iters/s
+
+ramp   [  92% ] 009/100 VUs  5m30.0s/6m0s  20.00 iters/s
+
+ramp   [  92% ] 006/100 VUs  5m31.0s/6m0s  19.34 iters/s
+
+ramp   [  92% ] 008/100 VUs  5m32.0s/6m0s  18.67 iters/s
+
+ramp   [  92% ] 004/100 VUs  5m33.0s/6m0s  18.02 iters/s
+
+ramp   [  93% ] 005/100 VUs  5m34.0s/6m0s  17.34 iters/s
+
+ramp   [  93% ] 006/100 VUs  5m35.0s/6m0s  16.67 iters/s
+
+ramp   [  93% ] 004/100 VUs  5m36.0s/6m0s  16.02 iters/s
+
+ramp   [  94% ] 004/100 VUs  5m37.0s/6m0s  15.34 iters/s
+
+ramp   [  94% ] 004/100 VUs  5m38.0s/6m0s  14.67 iters/s
+
+ramp   [  94% ] 003/100 VUs  5m39.0s/6m0s  14.02 iters/s
+
+ramp   [  94% ] 003/100 VUs  5m40.0s/6m0s  13.34 iters/s
+
+ramp   [  95% ] 003/100 VUs  5m41.0s/6m0s  12.68 iters/s
+
+ramp   [  95% ] 002/100 VUs  5m42.0s/6m0s  12.03 iters/s
+
+ramp   [  95% ] 003/100 VUs  5m43.0s/6m0s  11.34 iters/s
+
+ramp   [  96% ] 002/100 VUs  5m44.0s/6m0s  10.68 iters/s
+
+ramp   [  96% ] 002/100 VUs  5m45.0s/6m0s  10.03 iters/s
+
+ramp   [  96% ] 002/100 VUs  5m46.0s/6m0s  09.35 iters/s
+
+ramp   [  96% ] 002/100 VUs  5m47.0s/6m0s  08.68 iters/s
+
+ramp   [  97% ] 002/100 VUs  5m48.0s/6m0s  08.04 iters/s
+
+ramp   [  97% ] 002/100 VUs  5m49.0s/6m0s  07.35 iters/s
+
+ramp   [  97% ] 001/100 VUs  5m50.0s/6m0s  06.68 iters/s
+
+ramp   [  97% ] 001/100 VUs  5m51.0s/6m0s  06.06 iters/s
+
+ramp   [  98% ] 001/100 VUs  5m52.0s/6m0s  05.35 iters/s
+
+ramp   [  98% ] 001/100 VUs  5m53.0s/6m0s  04.69 iters/s
+
+ramp   [  98% ] 000/100 VUs  5m54.0s/6m0s  04.08 iters/s
+
+ramp   [  99% ] 001/100 VUs  5m55.0s/6m0s  03.37 iters/s
+
+ramp   [  99% ] 000/100 VUs  5m56.0s/6m0s  02.71 iters/s
+
+ramp   [  99% ] 000/100 VUs  5m57.0s/6m0s  02.15 iters/s
+
+ramp   [  99% ] 000/100 VUs  5m58.0s/6m0s  01.39 iters/s
+
+ramp   [ 100% ] 000/100 VUs  5m59.0s/6m0s  00.58 iters/s
+
+ramp   [ 100% ] 000/100 VUs  6m00.0s/6m0s  00.58 iters/s
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(95)<500' p(95)=437.87ms
+    ✓ 'p(99)<1500' p(99)=516.51ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 8098    22.49571/s
+    checks_succeeded...: 100.00% 8098 out of 8098
+    checks_failed......: 0.00%   0 out of 8098
+
+    ✓ status is 200
+    ✓ body has a quote
+
+    HTTP
+    http_req_duration..............: avg=254.62ms med=222.24ms p(90)=394.21ms p(95)=437.87ms p(99)=516.51ms max=631.59ms
+      { expected_response:true }...: avg=254.62ms med=222.24ms p(90)=394.21ms p(95)=437.87ms p(99)=516.51ms max=631.59ms
+    http_req_failed................: 0.00%  0 out of 4049
+    http_reqs......................: 4049   11.247855/s
+
+    EXECUTION
+    iteration_duration.............: avg=254.94ms med=222.57ms p(90)=394.48ms p(95)=438.17ms p(99)=516.91ms max=631.93ms
+    iterations.....................: 4049   11.247855/s
+    vus............................: 0      min=0         max=10 
+    vus_max........................: 100    min=100       max=100
+
+    NETWORK
+    data_received..................: 648 kB 1.8 kB/s
+    data_sent......................: 328 kB 911 B/s
+
+
+
+
+ramp ✓ [ 100% ] 000/100 VUs  6m0s  00.58 iters/s
+[60-loadtest.sh] <<< LOAD ENDED 15:54:16  (k6 exit code 0)
+
+[60-loadtest.sh] HPA timeline (changes only; full file: loadtest/evidence/hpa-timeline.tsv):
+time	current	desired	cpu%	spot	on-demand	other	pending
+15:48:16	3	3	0	2	1	0	0
+15:49:38	3	4	78	3	1	0	0
+15:49:54	4	4	89	3	1	0	0
+15:50:10	4	6	83	4	2	0	0
+15:50:26	6	6	76	4	2	0	0
+15:51:55	6	8	84	5	3	0	0
+15:52:11	8	8	96	5	3	0	0
+
+[60-loadtest.sh] peak replicas: 8 (spot=5 on-demand=3 pending=0); minReplicas: 3; most pods ever on a node without a capacity label: 0
+[60-loadtest.sh] final placement (pod -> node -> capacity):
+POD	NODE	CAPACITY	PHASE
+quote-api-d8557b786-4gq8s	k3d-itv-agent-0	spot	Running
+quote-api-d8557b786-bjdf4	k3d-itv-agent-0	spot	Running
+quote-api-d8557b786-99p4w	k3d-itv-agent-1	spot	Running
+quote-api-d8557b786-klq84	k3d-itv-agent-1	spot	Running
+quote-api-d8557b786-v5z8k	k3d-itv-agent-1	spot	Running
+quote-api-d8557b786-2tpdv	k3d-itv-agent-2	on-demand	Running
+quote-api-d8557b786-c72n5	k3d-itv-agent-2	on-demand	Running
+quote-api-d8557b786-vcftt	k3d-itv-agent-2	on-demand	Running
+[60-loadtest.sh] LOAD TEST PASSED (load)
