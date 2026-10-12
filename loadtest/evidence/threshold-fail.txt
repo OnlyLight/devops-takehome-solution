@@ -1,0 +1,17 @@
+# Proof that a threshold can fail (2026-10-12)
+# command: docker compose exec -T -e PROFILE=smoke -e P95_MS=50 toolbox bash /scripts/60-loadtest.sh
+# exit code: 1
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✗ 'p(95)<50' p(95)=241.94ms
+    ✓ 'p(99)<1500' p(99)=285.68ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+time="2026-10-12T14:07:46Z" level=error msg="thresholds on metrics 'http_req_duration' have been crossed"
+[60-loadtest.sh] WARN: k6 exited 99: a threshold failed (or the run errored)
+[60-loadtest.sh] WARN: LOAD TEST FAILED (smoke)

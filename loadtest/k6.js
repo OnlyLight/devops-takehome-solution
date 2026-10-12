@@ -14,13 +14,16 @@ const PROFILE = __ENV.PROFILE || 'load';
 
 // Thresholds come from the measured single-pod baseline (see LOADTEST.md); every one can be overridden.
 //
-// Baseline (500m CPU limit, one pod, through Traefik): stable up to ~4 req/s per pod with p95 183-219 ms and
-// 0 errors; at 5 req/s per pod it collapsed (p95 ~10 s, 21% errors).
-//  - FAIL_RATE 1%: a healthy run has 0 errors, and any real saturation produced >20%, so 1% separates them.
-//  - P95_MS 500: ~2.3x the stable p95 (~220 ms). It leaves room for the seconds an arrival-rate step spends above
-//    one pod's capacity before the HPA's new replicas are Ready, and is far below the 10 s seen at collapse.
-//  - P99_MS 1500: the tail may be worse than p95 during a scale-out step, but must stay an order of magnitude
-//    below the timeouts seen at collapse.
+// Baseline (loadtest/baseline.sh, output in loadtest/evidence/baseline.txt; 500m CPU limit, one pod, through
+// Traefik): up to 4 req/s per pod the p95 is 160-277 ms with 0 errors; at 5 req/s it collapsed (p95 8.9 s, with 0%
+// errors in that run); at 6 req/s 56% of the requests failed.
+//  - FAIL_RATE 1%: healthy runs have 0 errors; saturation gave 56% (baseline, 6 req/s) and 77% (stress). At the
+//    5 req/s edge the failures were still 0%, which is why the p95 threshold exists too.
+//  - P95_MS 500: roughly 2x the stable baseline p95. It leaves room for the seconds an arrival-rate step spends above
+//    one pod's capacity before the HPA's new replicas are Ready (healthy load runs: 414-438 ms), and is far below
+//    the ~9-10 s seen at collapse.
+//  - P99_MS 1500: the tail may be worse than p95 during a scale-out step (healthy load runs: 455-517 ms), but must
+//    stay far below the 10 s timeouts seen at collapse.
 const P95_MS = Number(__ENV.P95_MS || 500);
 const P99_MS = Number(__ENV.P99_MS || 1500);
 const FAIL_RATE = Number(__ENV.FAIL_RATE || 0.01);
