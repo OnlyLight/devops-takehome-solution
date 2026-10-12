@@ -59,12 +59,27 @@ cands=$(kubectl -n "$NS" get pods -l "$APP" -o json | jq -r --arg cap "$CAP" --a
   | [.items[].spec.nodeName] | group_by(.) | map({node: .[0], pods: length})
   | map(select($m[.node] == $cap)) | sort_by(-.pods) | .[] | "\(.node) \(.pods)"')
 [ -n "$cands" ] || die "no $CAP node currently hosts the app"
-NODE=$(echo "$cands" | awk -v t="$traefik_node" '$1 != t {print $1; exit}')
-if [ -z "$NODE" ]; then
-  NODE=$(echo "$cands" | awk 'NR==1 {print $1}')
-  warn "the only candidate ($NODE) also hosts Traefik (single replica): failures may come from the Ingress, not the app"
-fi
+# DRILL_NODE=<node> forces the target (default: the busiest candidate that does not host Traefik).
+NODE="${DRILL_NODE:-$(echo "$cands" | awk -v t="$traefik_node" '$1 != t {print $1; exit}')}"
+[ -n "$NODE" ] || NODE=$(echo "$cands" | awk 'NR==1 {print $1}')
 log "mode=$CAP  target node=$NODE  (Traefik is on ${traefik_node:-?})"
+
+# If every candidate hosts Traefik, move Traefik away FIRST: cordon the target so the replacement cannot land on it,
+# then delete the Traefik pod and wait for a Ready one elsewhere. Only then start measuring.
+if [ "$NODE" = "$traefik_node" ]; then
+  log "Traefik (single replica) runs on $NODE: moving it away first so the drill measures the app, not the Ingress"
+  kubectl cordon "$NODE" >/dev/null
+  kubectl -n kube-system delete pod -l app.kubernetes.io/name=traefik --wait=false >/dev/null
+  for _ in $(seq 1 60); do
+    ok=$(kubectl -n kube-system get pods -l app.kubernetes.io/name=traefik -o json | jq --arg n "$NODE" '
+      [.items[] | select(.metadata.deletionTimestamp | not) | select(.spec.nodeName != $n)
+       | select(any(.status.conditions[]?; .type == "Ready" and .status == "True"))] | length')
+    [ "${ok:-0}" -ge 1 ] && break
+    sleep 2
+  done
+  [ "${ok:-0}" -ge 1 ] || die "Traefik did not come back Ready on another node"
+  sleep 5   # let the Ingress settle before the curl loop starts
+fi
 
 log "BEFORE (pod -> node -> capacity):"
 placement_table
