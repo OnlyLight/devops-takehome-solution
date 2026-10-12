@@ -1,10 +1,6 @@
 # DevOps take-home: quote-api on k3d, ArgoCD and spot/on-demand placement
 
-<!-- TEMPLATE. Facts (commands, diagrams, tables) are filled in from what was built and measured; re-check them
-     against the repo before you submit. Prose slots are marked "YOUR TEXT". Delete every comment when done.
-     The reviewer reads the diagram BEFORE the code, so keep it correct and keep this file scannable. -->
-
-<!-- YOUR TEXT (2 sentences): what this repo is and what a reviewer gets after the quick start. -->
+A small CPU-bound Go service (`quote-api`) on a local k3d cluster, deployed by ArgoCD with spot/on-demand placement, an HPA, Prometheus and Grafana, a k6 load test and a latency alert. After the quick start you have the running cluster, the service at `localhost:8080`, and the evidence that it scales and survives losing a node.
 
 ## Quick start
 
@@ -13,7 +9,7 @@ Prerequisites: Docker (Desktop on Windows/macOS, with about 10 GB of RAM given t
 ```bash
 git clone https://github.com/OnlyLight/devops-takehome-solution && cd devops-takehome-solution
 docker compose up -d
-./scripts/run-all.sh        # about 12-15 minutes the first time; add --full for the 6-minute load test
+./scripts/run-all.sh        # about 15 minutes the first time, about 3 minutes on a second run; add --full for the 6-minute load test
 ```
 
 Then, from the host:
@@ -26,9 +22,20 @@ Then, from the host:
 
 Image: `ghcr.io/onlylight/devops-takehome-solution/quote-api:sha-<git sha>` (public, linux/amd64 and linux/arm64).
 
-## Architecture
+## Architecture overview
 
-<!-- Check this diagram against reality, then keep it. -->
+| Layer | What it is | Where |
+|---|---|---|
+| Harness | `docker compose up -d` starts a one-shot `bootstrap` (creates the cluster, labels the nodes) and a `toolbox` container with kubectl, helm, k6 and k3d; both talk to the host's Docker through `docker.sock` | `docker-compose.yml`, `toolbox/`, `scripts/00-cluster.sh`, `scripts/05-prepare-nodes.sh` |
+| Cluster | k3d: 1 control-plane node and 4 agents: 2 spot and 1 on-demand (label `acme.io/capacity`) and 1 GPU node (tainted) | `scripts/00-cluster.sh` |
+| Build | GitHub Actions runs the tests, builds a multi-arch image and pushes it to GHCR tagged `sha-<git sha>` | `.github/workflows/ci.yml`, `app/` |
+| Delivery | ArgoCD syncs the Helm chart from this repo into the `quote-api` namespace (automated, prune, selfHeal) | `argocd/`, `scripts/20-deploy.sh`, `chart/quote-api/` |
+| The service | `quote-api` (Go): `/api/quote`, `/healthz`, `/readyz`, `/metrics`; HPA 3 to 8 replicas at 60% of a 300m CPU request, PodDisruptionBudget, spot-preferred placement with at least one replica on on-demand | `chart/quote-api/` |
+| Placement repair | the descheduler puts the on-demand replica back after an HPA scale-down | `descheduler/`, `scripts/22-descheduler.sh` |
+| Observability | kube-prometheus-stack (Prometheus, Grafana, kube-state-metrics); a ServiceMonitor scrapes `/metrics`; a PrometheusRule holds the latency alert; the dashboard is loaded from a ConfigMap; no Alertmanager | `monitoring/`, `scripts/40-monitoring.sh`, `chart/quote-api/templates/` |
+| Load test | k6 through the Ingress while a script records HPA scaling, placement and the alert state | `loadtest/`, `scripts/60-loadtest.sh` |
+
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -62,8 +69,7 @@ flowchart LR
   TB -- "kubeconfig via serverlb:6443" --> LB
 ```
 
-<!-- YOUR TEXT (2-3 sentences): walk through the request path
-     host :8080 -> serverlb -> svclb-traefik on a node -> Traefik -> Service -> pod, and say which node pools the pods may use. -->
+A request to host `:8080` goes to `serverlb` (an nginx TCP proxy), then to the `svclb-traefik` pod on a node, then Traefik, which routes by the Ingress to the `quote-api` Service and a pod. Pods may use only the spot and on-demand agents: the GPU node (tainted) and the control plane are excluded by required node affinity.
 
 ## Script reference
 
@@ -82,33 +88,27 @@ flowchart LR
 
 ## Design decisions and trade-offs
 
-<!-- Keep each as 1-3 sentences: WHAT you chose, WHAT it costs, and the evidence. These are the questions the
-     reviewer will ask live. -->
-
-- **Placement (Part 2).** Required node affinity on the capacity label, a preference for spot, a hard topology spread across the two capacity domains (`maxSkew: 2`, `nodeTaintsPolicy: Honor`, `matchLabelKeys: pod-template-hash`) and a soft spread across hostnames. <!-- YOUR TEXT: why each layer exists; what a hard spread with the default policy does during the drill (it leaves a pod Pending: shown with a control experiment); what it costs (when the HPA goes above 3 replicas the extras spill to on-demand). -->
-- **The descheduler.** <!-- YOUR TEXT: the problem (HPA scale-down left 3 spot + 0 on-demand in 2 of 3 cycles), why topologySpread cannot prevent it, what the descheduler does, the narrow policy, and the 51 s recovery measured. -->
-- **GitOps flow.** <!-- YOUR TEXT: ArgoCD syncs the chart from Git; the image tag is bumped by a commit (the tag must already exist on GHCR, so two commits: build, then bump); selfHeal means no hard-coded replicas. -->
-- **The service.** <!-- YOUR TEXT: a fixed amount of CPU work per request (calibrated at start-up) rather than a wall-clock spin; the baseline showed the spin never saturated a CPU-limited pod. -->
-- **Load test and observability.** <!-- YOUR TEXT: open-model k6, thresholds from the baseline, why a latency alert rather than a 5xx alert. See LOADTEST.md. -->
-- **Chart security context.** Non-root, read-only root filesystem (required by the task) plus no privilege escalation, all capabilities dropped and the RuntimeDefault seccomp profile (extras, marked in the chart). <!-- YOUR TEXT: why. -->
+- **Placement (Part 2).** Required node affinity on the capacity label, a preference for spot, a hard topology spread across the two capacity domains (`maxSkew: 2`, `nodeTaintsPolicy: Honor`, `matchLabelKeys: pod-template-hash`) and a soft spread across hostnames. The spot preference favours spot, the hard spread guarantees a replica on on-demand when pods are placed, and the hostname spread stops two pods stacking on one node. With the default `nodeTaintsPolicy` a cordoned node still counts in the skew and a pod stays Pending (control experiment: 1 Pending with the default, 3 Running with `Honor`). Cost: above 3 replicas the extras spill to on-demand (5 spot + 3 on-demand at 8 replicas).
+- **The descheduler.** HPA scale-down left 3 spot + 0 on-demand in 2 of 3 cycles, because topologySpread only acts when a pod is placed. The descheduler sees skew 3 > `maxSkew` 2 and evicts a spot pod, so its replacement must go to on-demand. The policy is narrow (one plugin, only `quote-api`, `nodeFit`, PDB respected). Recovery from a deliberately created (3, 0) state took 51 s; I have not yet watched it fix a natural scale-down.
+- **GitOps flow.** ArgoCD (automated, prune, selfHeal) syncs the chart from Git. A new image needs two commits (build, then bump the tag, which must already exist on GHCR). The Deployment has no `replicas` because the HPA owns it and selfHeal would revert it.
+- **The service.** Each request does a fixed amount of SHA-256 work, calibrated at start-up to about 100 ms of CPU. The first version spun for 100 ms of wall clock, so a pod limited to 0.5 core served 40 req/s with no errors and could never saturate.
+- **Load test and observability.** k6 uses an open model (fixed arrival rate); the thresholds sit between a healthy run and a collapsed one from a one-pod baseline; the alert is on latency because a saturated service answers slowly instead of returning 5xx. See `LOADTEST.md`.
+- **Chart security context.** Non-root, read-only root filesystem (required by the task) plus no privilege escalation, all capabilities dropped and the RuntimeDefault seccomp profile (extras, marked in the chart). Together they pass the Pod Security `restricted` profile (checked with a server dry run, with a bad Deployment as a negative control); the app only listens on 8080, so it needs no capability.
 
 ## What I cut, and why
 
-<!-- The task says: "knowing what to skip is a senior skill". Fill the "why" column honestly. -->
+Of the optional tracks (Parts 4 to 6) I chose Part 6 (monitoring, load test, observability) first because it is the area I have had the least hands-on exposure to, so it was where I could learn the most, and I preferred one track done in depth over three done thinly. The rest was cut for time.
 
-| Cut | Why (YOUR TEXT) |
+| Cut | Why |
 |---|---|
-| Part 4 (GitHub Actions migration with a hard-failing SAST gate) | <!-- time; Part 6 was chosen as the track; what exists instead: a minimal workflow that tests, builds and pushes by SHA --> |
-| Part 5 (Karpenter, Cloudflare Terraform) | <!-- time; one track is enough --> |
-| Alertmanager | <!-- the task needs an alert rule, not a notification channel; saves memory --> |
-| TLS on the Ingress, cosign, tracing, multi-environment values | <!-- --> |
-| ArgoCD UI exposure, a second Traefik replica | <!-- --> |
+| Part 4 (GitHub Actions migration with a hard-failing SAST gate) | I chose Part 6 as the track. `ci.yml` is a minimal pipeline (vet and test with `-race`, multi-arch build pushed by git SHA); the legacy GitLab file is not migrated and there is no SAST gate. |
+| Alertmanager | The task needs an alert rule, not a notification channel; dropping it saves memory. The alert is visible in Prometheus, nobody is notified. |
+| TLS on the Ingress, cosign, tracing, multi-environment values | Gold-plating, which the task says not to do. |
+| ArgoCD UI exposure, a second Traefik replica | The UI is reachable by port-forward (below). Traefik is the k3s built-in with one replica: a single point of failure for incoming traffic that I accepted for a local harness. |
 
 ## Troubleshooting notes (reviewer machine)
 
-<!-- Keep 2-3. Candidates with the facts already known: -->
-
-- **Port 8080 is taken.** `HOST_PORT=8081 docker compose up -d` (set it before the first `up`; see `.env.example`). <!-- YOUR TEXT: verify the exact steps on a machine where 8080 is busy -->
+- **Port 8080 is taken.** `HOST_PORT=8081 docker compose up -d` (set it before the first `up`; see `.env.example`).
 - **Not enough memory.** The stack needs about 10 GB for Docker: Docker Desktop on Windows uses WSL2, give it memory in `%UserProfile%\.wslconfig` (`[wsl2] memory=10GB`), then `wsl --shutdown`.
 - **Windows/Git Bash.** Scripts are bind-mounted into Linux containers, so line endings must be LF (`.gitattributes` enforces it); Git Bash rewrites `/scripts/...` into a Windows path unless `MSYS_NO_PATHCONV=1` (`run-all.sh` sets it).
 - **Apple Silicon / arm64.** The toolbox and the app image are built for amd64 and arm64.
@@ -116,9 +116,6 @@ flowchart LR
 - **ArgoCD UI.** Not exposed. From the host: create a kubeconfig for the host (`docker compose exec -T toolbox k3d kubeconfig get itv`, replace the `server:` host with `127.0.0.1`) and `kubectl -n argocd port-forward svc/argocd-server 8081:443`.
 
 ## Findings in the provided files (imperfect handoff)
-
-<!-- The task grades how you handle broken or missing handoff material. These are the real findings; write each as
-     "what I saw, what I did". Add the ones you hit yourself, delete any you did not. -->
 
 | File | Finding | What I did |
 |---|---|---|
@@ -136,24 +133,3 @@ flowchart LR
 - `OPS-ANSWERS.md`: Part 7.
 - `AI-USAGE.md`: how AI was used and where it was wrong.
 - `VERSIONS.md`: every pinned version and where it was checked.
-
-## Bonus: the same service on AWS
-
-<!-- OPTIONAL. Boxes and arrows, not marketing art. A starting point to edit (check every box is something you can defend): -->
-
-```mermaid
-flowchart LR
-  U["users"] --> CDN["CloudFront or Cloudflare"] --> ALB["ALB (AWS Load Balancer Controller, from the Ingress)"]
-  ALB --> P["quote-api pods in EKS"]
-  subgraph EKS
-    P
-    NG1["spot node group / Karpenter NodePool (preferred)"]
-    NG2["on-demand node group (guaranteed replica)"]
-    NG3["GPU NodePool, tainted nvidia.com/gpu"]
-    ARGO["ArgoCD"]
-    OBS["Prometheus + Grafana"]
-  end
-  P --> RDS[("RDS")]
-  OBS -.-> P
-  GH[("Git")] --> ARGO --> P
-```

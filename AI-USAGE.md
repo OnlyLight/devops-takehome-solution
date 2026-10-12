@@ -1,62 +1,35 @@
 # AI usage
 
-<!-- TEMPLATE. The task: "We expect heavy AI usage. What we screen for is whether you can verify, correct, and own AI
-     output", and "we will ask you to walk through your code live either way". Everything below must be TRUE and in
-     your own words. The candidate cases are real events from the work with evidence you can re-run; pick the ones
-     you can explain, and say honestly who noticed what (the AI itself noticed some of them). -->
-
 ## Tools and what they were used for
 
-<!-- YOUR TEXT: Claude Code (the VS Code extension; models Opus 5.5 and Sonnet 5.5) was the main assistant. Say for
-     which parts: planning/analysis (with a custom analyst agent), the harness and scripts, the chart, the Go service,
-     the troubleshooting guidance, the load-test tooling, the docs. Say what you did yourself (for example diagnosing
-     the Part 3 faults by hand, choosing the scope, deciding to cut Parts 4 and 5, deciding between options). -->
+Claude Code in VS Code (Sonnet 5.5) was my only AI assistant: planning with a custom analyst agent, the harness and scripts, the Helm chart, the Go service, the troubleshooting guidance, the load-test tooling and first drafts of the docs. I chose the scope (Part 6 as the track), decided between design options, and re-ran commands to check what the AI reported. For Part 6 I re-ran the queries and calculations myself, and the AI corrected my mistakes (for example I divided the load by 3 pods twice).
 
 ## How I verified AI output
 
-<!-- YOUR TEXT (3-5 sentences, the habits that came out of the cases below). Facts that fit: nothing counted as done
-     without a command and its output; claims were tested with a control experiment that could fail (a hard spread
-     with and without `nodeTaintsPolicy: Honor`; a Pod Security check with a deliberately bad Deployment); chart
-     values were checked against `helm show values` after one invented key; "it ran" was never treated as "the
-     setting took effect". -->
+Nothing counted as done without a command and its output. Claims were tested with a control experiment that could fail (a hard spread with and without `nodeTaintsPolicy: Honor`; a Pod Security check with a deliberately bad Deployment), chart values were checked against `helm show values`, and numbers in the docs must point to committed evidence.
 
 ## Representative prompts
 
-<!-- Pick 2-3 prompts that really moved the work forward, in your own wording (they were written in Vietnamese: keep
-     the original and add a translation if you like). Copy them from your history; do not reconstruct them. Say what
-     each one produced. Candidate TYPES (check the real wording before using any):
-     - the one that loaded the plan and context at the start of the work
-     - "verify this before moving on" style prompts (for example before the reclaim drill)
-     - a prompt that made the AI explain something you then re-ran yourself (for example the two-ended NetworkPolicy
-       reasoning and the DNS experiment) -->
-
-1. <!-- prompt -->
-   - Result: <!-- what it moved forward -->
-2. <!-- prompt -->
-   - Result: <!-- -->
-3. <!-- optional -->
-   - Result: <!-- -->
+1. *"Study Part 6 (monitoring, load test, observability) of the ITV DevOps take-home with me. I want to understand it deeply enough to answer a reviewer live, so explain step by step, make me run the commands myself, and point out what is verified versus assumed. Do not write my docs for me."* Result: a step-by-step walk with experiments I ran myself and every claim marked verified or assumed; it exposed the sourcing problem in case 9.
+2. *"bỏ qua phần bottleneck đc ko.. vì nó là phần đc làm qua folder scratch"* (can I skip the bottleneck section, its numbers came from the scratch folder?) Result: the AI checked the task text instead of agreeing, found that item 6 requires it, and we kept a short version that claims only what the committed evidence shows.
+3. *"Help me explain Part 6 step by step.. I want to understand clearly everything related to monitoring"* Result: a layered map of the monitoring stack; my follow-up questions were answered by checking the cluster, not from memory.
 
 ## Where the AI was wrong or suboptimal, and how it was caught
 
-<!-- REQUIRED: at least one. Choose from the candidates below and write 4-6 sentences each in your own words:
-     what the AI said or built, what made it suspicious, the exact command that showed the truth, and what you changed.
-     Be exact about WHO caught it. -->
+| # | What went wrong | How it showed / evidence | Fix |
+|---|---|---|---|
+| 1 | **Placement ignored HPA scale-down.** Topology spread only acts when a pod is placed, so 2 of 3 scale-downs left 3 spot + 0 on-demand. | the on-demand count in `loadtest/evidence/stress/hpa-timeline.tsv` | descheduler; recovery measured at 51 s |
+| 2 | **The service never saturated.** `/api/quote` spun for 100 ms of wall clock, so a 0.5-core pod served 40 req/s with no errors. | the baseline looked impossible (40 req/s x 100 ms is 4 cores); now `loadtest/evidence/baseline.txt` collapses at 5 req/s per pod | fixed work calibrated at start-up (`app/main.go`) |
+| 3 | **An invented Helm key.** `applicationSet.enabled: false` does not exist; Helm silently ignored it. | `kubectl get deploy` still showed the controller; compare `helm get values argocd` with `helm show values argo/argo-cd --version 10.10.1` | `applicationSet.replicas: 0` |
+| 4 | **Wrong NetworkPolicy/DNS expectation.** Two explanations for why `verify.sh` passed without a DNS rule were disproved by experiments. | the curl experiment in `TROUBLESHOOTING.md` section 8 | explicit DNS egress rule |
+| 5 | **Confident but unverified statements**: "verified in the reclaim drill" before any drill; "GHCR package is private by default"; "k3d writes 0.0.0.0"; `matchLabelKeys` "GA ~1.33". | re-reading before committing, `gh api`, `kubectl explain`, `k3d kubeconfig get` | corrected or removed (`VERSIONS.md`) |
+| 6 | **Limits set without measuring.** Grafana's 256 Mi limit OOM-killed it 14 times in two hours. | `kubectl describe pod` shows `OOMKilled`, `restarts=14` | limit 768 Mi |
+| 7 | **Plan assumptions** about this machine and a path that did not exist. | the first hardware and file checks | corrected before any work |
+| 8 | **An operational slip.** The stress run started without `PROFILE=stress` and overwrote the first load run's raw evidence. | the log said `profile=load`; `loadtest/evidence/load/first-run-console.txt` is what remains | stopped, kept the console output, re-ran |
+| 9 | **Numbers that could not be re-checked.** A k6 comment said 1500 ms is "an order of magnitude below the timeouts" (it is 6.7x); the baseline, bottleneck and "24 req/s" figures came from the git-ignored `scratch/`; a re-run gave 0% errors at 5 req/s per pod, not the 21% in my notes. | reviewing `LOADTEST.md` against committed evidence (`git check-ignore -v scratch`) | baseline script and output committed (`loadtest/`), comments corrected, unsourced figures marked as hypotheses |
 
-| # | What went wrong | How it showed | Evidence you can re-run | Fix |
-|---|---|---|---|---|
-| 1 | **Placement design ignored HPA scale-down.** Topology spread only acts when a pod is placed; the ReplicaSet picked pods to delete without looking at it, so 2 of 3 scale-downs left 3 spot + 0 on-demand, against "always at least one on-demand". | the load-test timeline records the on-demand count; the surviving pods were all spot | `loadtest/evidence/stress/hpa-timeline.tsv`; `docker compose exec toolbox kubectl -n quote-api get pods -o wide` | descheduler (`descheduler/values.yaml`); recovery measured at 51 s |
-| 2 | **The service never saturated.** `/api/quote` spun until 100 ms of wall clock had passed instead of doing a fixed amount of work, so a pod limited to 0.5 core served 40 req/s with no errors. | the baseline looked impossible: 40 req/s x 100 ms of CPU is 4 cores on a 0.5-core pod | `scratch`-style baseline in the knowledge notes; the stress run now collapses at ~5 req/s per pod | fixed work, calibrated at start-up (`app/main.go`) |
-| 3 | **An invented Helm key.** `applicationSet.enabled: false` does not exist in the chart; Helm silently ignores unknown keys, so everything "worked". | `kubectl get deploy` still showed the applicationset controller running | compare `helm get values argocd` with `helm show values argo/argo-cd --version 10.10.1` | `applicationSet.replicas: 0`; values checked against the chart from then on |
-| 4 | **Wrong expectation about the NetworkPolicy/DNS.** The AI expected the smoke test to fail on DNS and then, when `verify.sh` passed without a DNS rule, proposed two explanations ("same node is not filtered", "wait for the sync") that experiments disproved. | a pod that waited 20 s could not resolve names, a pod whose command ran at start-up could | the IP-versus-name curl experiment in `TROUBLESHOOTING.md` section 8 | explicit DNS egress rule; the pass is a start-up race |
-| 5 | **Confident statements that were not verified**: "verified empirically in the reclaim drill" before any drill existed; "the GHCR package is private by default"; "k3d writes 0.0.0.0" (it was `host.docker.internal`); `matchLabelKeys` "GA ~1.33" (the cluster says beta). | re-reading the claim before committing, and `gh api`, `kubectl explain`, `k3d kubeconfig get` | the notes in `VERSIONS.md` that now say what is and is not verified | the claims were corrected or removed |
-| 6 | **Resource limits set without measuring**: Grafana's 256 Mi memory limit OOM-killed it 14 times in two hours (it needs ~520 Mi). | the UI showed "failed to load its application files"; the pod had `restarts=14` | `kubectl describe pod` -> `Last State: OOMKilled` | limit 768 Mi, request 256 Mi |
-| 7 | **Plan assumptions**: the plan treated this machine as unknown and pointed at a path that did not exist. | the first hardware and file checks | -- | corrected before any work |
-| 8 | **An operational slip**: the AI started the stress run without `PROFILE=stress`, so the default profile overwrote the first load run's raw evidence. | the log said `profile=load` | `loadtest/evidence/load/first-run-console.txt` is what remains of that run | stopped it, kept the console output, re-ran |
-
-<!-- YOUR TEXT: for the 1-3 cases you pick, tell it as a short story. Do not include a case you cannot walk through. -->
+**Case 3 as a story.** The AI wrote `applicationSet.enabled: false` in `argocd/values.yaml`. The script exited 0 and ArgoCD showed Synced and Healthy, but `kubectl -n argocd get deploy` still listed the applicationset controller as running. The AI noticed this while answering a question about Argo's polling; I then re-ran the two helm commands myself and saw that the chart has no such key, so Helm had silently ignored it. I now check every values key against `helm show values`.
 
 ## What I would not trust the AI with
 
-<!-- YOUR TEXT (2-3 sentences, optional but strong): for example claims about behaviour it has not tested (scheduler
-     internals, version-specific feature status), numbers it recalls, and configuration keys it types from memory. -->
+Claims about behaviour it has not tested (scheduler internals, version-specific feature status), numbers it recalls from memory, and configuration keys it types from memory. Each of these was wrong at least once here, mostly caught by running a command.
