@@ -36,5 +36,11 @@ if [ "${1:-}" = "--broken" ]; then
   exit 0
 fi
 
+# verify.sh waits only 60 s for each rollout; a first run on a node that still has to pull nginx and busybox
+# can take longer, so wait here (generously) and let verify.sh judge the result.
+log "waiting for the workloads to roll out"
+kubectl -n "$NS" rollout status deploy/web --timeout=240s >/dev/null
+kubectl -n "$NS" rollout status deploy/ai-inference --timeout=240s >/dev/null
+
 log "running verify.sh"
 sh "$DIR/verify.sh"
