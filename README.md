@@ -9,7 +9,7 @@ Prerequisites: Docker (Desktop on Windows/macOS, with about 10 GB of RAM given t
 ```bash
 git clone https://github.com/OnlyLight/devops-takehome-solution && cd devops-takehome-solution
 docker compose up -d
-./scripts/run-all.sh        # about 15 minutes the first time, about 3 minutes on a second run; add --full for the 6-minute load test
+./scripts/run-all.sh        # about 15 minutes the first time, 3-4 minutes on a second run; add --full for the 6-minute load test
 ```
 
 Then, from the host:
