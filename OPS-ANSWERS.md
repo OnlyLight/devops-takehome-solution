@@ -14,13 +14,11 @@
 
 ## 2. Spot reclaims at 3 AM page on-call for non-issues: an alerting strategy
 
-**Principle:** page on user impact, not on node count.
+**Principle:** page on user impact, not on node count: replicas below desired for longer than a normal replacement, high p95 or error rate, pods Pending because no capacity can be obtained. `KubeNodeUnreachable` becomes a ticket or chat notification, and pages only if a node stays NotReady well beyond a normal replacement.
 
-**Cut the noise:** handle the interruption on purpose. Karpenter (or the AWS Node Termination Handler) reacts to the 2-minute spot notice and drains the node, so pods move before it dies. Node-level alerts such as `KubeNodeUnreachable` go to a ticket or chat channel, not the pager, with a `for:` longer than a normal replacement, and an inhibition rule mutes them while a node is cordoned or draining.
+**Cut the noise:** use a `for:` longer than a normal spot replacement, and drain the node on purpose from the 2-minute spot notice (Karpenter or the Node Termination Handler), so pods move before it dies.
 
-**Still pages:** replicas available below desired (or an SLO burn rate) for a few minutes, pods Pending because the pool cannot get capacity, a node NotReady well past the replacement time, and any on-demand node lost.
-
-**Not hiding real failures:** the suppression applies only to spot nodes with an interruption notice or a drain in progress, never as a blanket rule, and the symptom alerts and the NotReady backstop still fire. To test it, simulate an interruption (for example with AWS FIS) and kill a non-spot node: only the second should page.
+**Not hiding real failures:** mute node alerts only for spot nodes that are cordoned or draining, with an expiry, never for on-demand nodes; the symptom alerts are never muted. Test two cases: drain a spot node (expect no page) and stop a node abruptly (expect a page after the `for:` time).
 
 ## 3. LCP of 5 s on a marketing site behind Cloudflare: is HTML caching working?
 

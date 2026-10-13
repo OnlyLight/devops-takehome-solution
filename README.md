@@ -102,6 +102,7 @@ Of the optional tracks (Parts 4 to 6) I chose Part 6 (monitoring, load test, obs
 | Cut | Why |
 |---|---|
 | Part 4 (GitHub Actions migration with a hard-failing SAST gate) | I chose Part 6 as the track. `ci.yml` is a minimal pipeline (vet and test with `-race`, multi-arch build pushed by git SHA); the legacy GitLab file is not migrated and there is no SAST gate. |
+| Part 5 (Karpenter and Cloudflare Terraform, validate-only) | It only checks that the files are well-formed (`terraform validate`), not that they work on a real EKS cluster or Cloudflare zone, so I would learn less from it than from Part 6, where I could measure real behaviour. |
 | Alertmanager | The task needs an alert rule, not a notification channel; dropping it saves memory. The alert is visible in Prometheus, nobody is notified. |
 | TLS on the Ingress, cosign, tracing, multi-environment values | Gold-plating, which the task says not to do. |
 | ArgoCD UI exposure, a second Traefik replica | The UI is reachable by port-forward (below). Traefik is the k3s built-in with one replica: a single point of failure for incoming traffic that I accepted for a local harness. |
@@ -125,6 +126,7 @@ Of the optional tracks (Parts 4 to 6) I chose Part 6 (monitoring, load test, obs
 | `verify.sh` smoke step | can print PASS without the DNS allow rule, because the first name lookup can win a start-up race | added the DNS rule anyway; documented in `TROUBLESHOOTING.md` |
 | the task | does not say how to run k3d inside compose (docker.sock, ports, CRLF, arm64) | designed it in `docker-compose.yml` and the toolbox image |
 | Part 2 vs Part 3 | the node label is `acme.io/node-type`, `broken-app.yaml` selects `node-type` | fixed the workload, never the node |
+| `ci/legacy.gitlab-ci.yml` | contains AWS's documented example keys (`AKIAIOSFODNN7EXAMPLE`), which the file itself says are not live credentials; a secret scanner may still flag them | left the provided file unmodified; a scan of the whole Git history for keys and tokens found nothing else |
 
 ## More
 
