@@ -1,53 +1,39 @@
 # Ops answers
 
-<!-- TEMPLATE. The task: "max 1.5 pages total" for the four questions, so about 150-200 words each. Write in your own
-     words; the "points to cover" are prompts, not an answer key, and any claim you make you must be able to defend
-     live. Delete these comments when done. -->
-
 ## 1. EKS 1.33 to 1.35 with zero downtime: order and top 3 risks
 
-<!-- Points to cover:
-     - why it has to be two upgrades (one minor version at a time) and that the control plane cannot be downgraded
-     - what you check BEFORE touching anything: removed/deprecated APIs in use, add-on compatibility with the target
-       version, PodDisruptionBudgets and spare capacity for draining, a rollback story
-     - the order: control plane, then the add-ons (vpc-cni, coredns, kube-proxy, EBS/EFS CSI) to versions compatible
-       with the new control plane, then the nodes (managed node group rolling update or Karpenter drift) and why nodes
-       must not be newer than the control plane
-     - how you keep traffic safe during node rolls (PDBs, surge, readiness) and how you validate between steps
-     Your top 3 risks, each with how you would reduce it. -->
+**Before:** scan for removed APIs (kubent or Pluto), check the add-ons (vpc-cni, CoreDNS, kube-proxy, EBS/EFS CSI) against AWS's compatibility list, confirm PDBs and spare capacity, and rehearse on staging, because a control plane cannot be downgraded.
 
-YOUR TEXT.
+**Order:** control plane one minor at a time (1.33 to 1.34 to 1.35), then the add-ons one by one, then the nodes last (a kubelet must not be newer than the API server). Add new nodes first and drain the old ones once the new ones are Ready; check a `curl` loop through the Ingress after each step.
+
+**Top 3 risks:**
+
+1. Removed APIs or incompatible add-ons: scan, compatibility list, staging.
+2. Stateful pods killed on drain (EBS is zone-bound): PDB, graceful shutdown, spare capacity in the same zone, snapshot first.
+3. A bad add-on breaks DNS or networking: one at a time, test DNS and the Ingress between steps, revert the version if needed.
 
 ## 2. Spot reclaims at 3 AM page on-call for non-issues: an alerting strategy
 
-<!-- Points to cover:
-     - alert on user-visible symptoms (SLO, error rate, latency, not-ready replicas) rather than on node count
-     - tell "node going away on purpose" from "node failed": spot interruption notices / node termination handling,
-       a `for:` duration long enough to ride out a normal replacement, inhibition rules
-     - what still pages: capacity below a threshold, workloads not ready, nodes NotReady for much longer than a
-       normal replacement, a nodepool that cannot get capacity
-     - how you keep real node failures from being hidden by the suppression, and how you would test it -->
+**Principle:** page on user impact, not on node count.
 
-YOUR TEXT.
+**Cut the noise:** handle the interruption on purpose. Karpenter (or the AWS Node Termination Handler) reacts to the 2-minute spot notice and drains the node, so pods move before it dies. Node-level alerts such as `KubeNodeUnreachable` go to a ticket or chat channel, not the pager, with a `for:` longer than a normal replacement, and an inhibition rule mutes them while a node is cordoned or draining.
+
+**Still pages:** replicas available below desired (or an SLO burn rate) for a few minutes, pods Pending because the pool cannot get capacity, a node NotReady well past the replacement time, and any on-demand node lost.
+
+**Not hiding real failures:** the suppression applies only to spot nodes with an interruption notice or a drain in progress, never as a blanket rule, and the symptom alerts and the NotReady backstop still fire. To test it, simulate an interruption (for example with AWS FIS) and kill a non-spot node: only the second should page.
 
 ## 3. LCP of 5 s on a marketing site behind Cloudflare: is HTML caching working?
 
-<!-- Points to cover, as ordered steps:
-     - headers first: `curl -I` and the Cloudflare cache status (HIT / MISS / DYNAMIC / BYPASS), Cache-Control,
-       Set-Cookie, Vary, Age
-     - what Cloudflare caches by default (static file types, not HTML) and what a rule for HTML needs
-     - what makes a response uncacheable at the origin (no-store/private, cookies, Vary) and how to confirm it
-     - the origin side (TTFB with and without the cache), then the LCP element itself (image size/format/priority)
-     - how you would confirm the fix (repeat the same requests, real-user data / WebPageTest) -->
-
-YOUR TEXT.
+1. **Headers:** `curl -I https://site/` and read `cf-cache-status` (HIT, MISS, EXPIRED, DYNAMIC, BYPASS), `Cache-Control`, `Set-Cookie`, `Vary` and `Age`. DYNAMIC means Cloudflare does not treat the HTML as cacheable.
+2. **Rules:** by default Cloudflare caches static file types, not HTML. HTML needs a Cache Rule (eligible for cache, with an edge TTL) and a bypass for logged-in or cart cookies.
+3. **Origin:** `Cache-Control: no-store` or `private`, cookies on every response, or a broad `Vary` can make HTML uncacheable. Confirm with `curl -I` straight to the origin, then fix or override them. Compare TTFB (`curl -w '%{time_starttransfer}'`) on a HIT and on a MISS.
+4. **The LCP element:** find it with PageSpeed Insights or DevTools. It is often a hero image: check size and format (WebP or AVIF), `fetchpriority=high`, no lazy-loading, preload, and render-blocking CSS.
+5. **Confirm:** repeat the same requests (HIT, `Age` growing, lower TTFB) and compare field data (CrUX or RUM) or WebPageTest before and after.
 
 ## 4. Application secrets on EKS: two approaches, and my pick for a startup with several production clusters
 
-<!-- Points to cover:
-     - two approaches compared on: where the source of truth lives, how a pod gets the value, rotation, auditing,
-       access control (IAM roles for service accounts / Pod Identity), GitOps friendliness, operational cost
-       (for example External Secrets Operator with AWS Secrets Manager, Secrets Store CSI Driver, Sealed Secrets/SOPS)
-     - your pick for THIS situation (small team, several clusters) and the reason, including what you give up -->
+**A. External Secrets Operator + AWS Secrets Manager.** The source of truth is Secrets Manager; the operator syncs values into Kubernetes Secrets using an IAM role for the service account (or Pod Identity). Rotation and CloudTrail auditing come from AWS, and Git only holds `ExternalSecret` references, so it fits GitOps.
 
-YOUR TEXT.
+**B. Sealed Secrets (or SOPS).** Secrets are encrypted in Git and decrypted in the cluster. There is no cloud dependency and it is cheap, but every cluster has its own key, rotation is manual, and there is no central audit or access control.
+
+**Pick: A.** With several production clusters, one central store with IAM-scoped access, rotation and an audit trail beats a key per cluster. What I give up: a dependency on AWS and one more controller to run, and the values still land in etcd as Secrets, so I turn on KMS envelope encryption.
